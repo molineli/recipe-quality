@@ -1,0 +1,7 @@
+score_weights:
+  basic_nutrition_quality: 40
+  limiting_components: 25
+  cooking_processing_safety: 15
+  daily_intake_fit: 12
+  personalization_feasibility: 8
+

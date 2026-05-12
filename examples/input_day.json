@@ -1,0 +1,35 @@
+{
+  "evaluation_scope": "whole_day",
+  "target_population": "healthy_adult",
+  "daily_targets": {
+    "energy_kcal": 2000,
+    "protein_g": 60,
+    "fiber_g": 25,
+    "sodium_mg_limit": 2000,
+    "cooking_oil_g_limit": 25,
+    "added_sugar_g_limit": 25
+  },
+  "items": [
+    {
+      "name": "米饭",
+      "amount_g": 200,
+      "meal_name": "lunch"
+    },
+    {
+      "name": "鸡蛋",
+      "amount_g": 50,
+      "meal_name": "breakfast"
+    }
+  ],
+  "condiments": [
+    {
+      "name": "食盐",
+      "amount_g": 3
+    },
+    {
+      "name": "烹调油",
+      "amount_g": 20
+    }
+  ]
+}
+

@@ -1,0 +1,55 @@
+from recipe_quality.fatsecret.resolver import FatSecretResolver, choose_serving
+
+
+class FakeClient:
+    def search_foods(self, query, max_results=10):
+        return {
+            "foods": {
+                "food": [
+                    {"food_id": "2", "food_name": "Brand Rice", "food_type": "Brand", "brand_name": "X"},
+                    {"food_id": "1", "food_name": "Rice", "food_type": "Generic"},
+                ]
+            }
+        }
+
+    def get_food(self, food_id):
+        assert food_id == "1"
+        return {
+            "food": {
+                "food_id": "1",
+                "food_name": "Rice",
+                "servings": {
+                    "serving": [
+                        {
+                            "serving_description": "1 cup",
+                            "metric_serving_amount": "158",
+                            "metric_serving_unit": "g",
+                            "calories": "205",
+                        },
+                        {
+                            "serving_description": "100 g",
+                            "metric_serving_amount": "100",
+                            "metric_serving_unit": "g",
+                            "calories": "130",
+                            "protein": "2.7",
+                        },
+                    ]
+                },
+            }
+        }
+
+
+def test_resolver_prefers_generic_candidate_and_100g_serving():
+    resolver = FatSecretResolver(FakeClient())
+
+    resolved = resolver.resolve_item({"name": "rice", "amount_g": 200})
+
+    assert resolved.fatsecret_food_id == "1"
+    assert resolved.serving_used == "100 g"
+    assert resolved.nutrients.energy_kcal == 260
+    assert resolved.match_confidence == "high"
+    assert resolved.nutrition_estimation_status == "resolved"
+
+
+def test_choose_serving_returns_none_when_no_metric_serving():
+    assert choose_serving([{"serving_description": "1 serving", "calories": "100"}]) is None

@@ -1,0 +1,10 @@
+cooking_method_score:
+  steam: 10
+  boil: 10
+  ready_to_eat_minimal: 9
+  stir_fry_low_oil: 8
+  stir_fry: 7
+  deep_fry: 2
+  charred: 0
+  unknown_cooking_method: 6
+

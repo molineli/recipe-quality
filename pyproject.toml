@@ -1,0 +1,22 @@
+[project]
+name = "recipe-quality"
+version = "0.1.0"
+description = "RQS-P recipe quality scoring with FatSecret-backed nutrition lookup."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.111",
+    "python-dotenv>=1.0",
+    "requests>=2.31",
+    "uvicorn>=0.30",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+

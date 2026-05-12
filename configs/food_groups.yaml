@@ -1,0 +1,10 @@
+food_groups:
+  grains_and_tubers:
+    target_g: 250
+  vegetables:
+    target_g: 300
+  fruits:
+    target_g: 200
+  quality_protein_foods:
+    target_g: 150
+

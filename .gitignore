@@ -1,3 +1,7 @@
 .history
 评价规则.pdf
 .env
+__pycache__/
+.pytest_cache/
+.venv/
+*.pyc
