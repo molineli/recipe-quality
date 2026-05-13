@@ -68,3 +68,33 @@ def test_engine_accepts_meals_dishes_ingredients_shape():
     coverage = result["module_details"]["basic_nutrition_quality"]["food_group_coverage"]
     assert result["daily_totals"]["food_group_amounts_g"]["vegetables"] == 200
     assert coverage["group_scores"]["vegetables"] == 2.0
+
+
+def test_engine_passes_target_user_to_basic_nutrition_targets():
+    """验证 engine 会把 target_user 传给 A 模块用于动态目标值。"""
+    result = evaluate_daily_diet(
+        {
+            "target_user": {"sex": "female"},
+            "daily_targets": {"energy_kcal": 2000},
+            "daily_totals": {
+                "energy_kcal": 2000,
+                "protein_g": 75,
+                "fat_g": 60,
+                "saturated_fat_g": 10,
+                "carbohydrate_g": 260,
+                "fiber_g": 25,
+                "sodium_mg": 1000,
+                "cooking_oil_g": 20,
+                "added_sugar_g": 0,
+                "calcium_mg": 800,
+                "iron_mg": 20,
+                "potassium_mg": 2000,
+                "vitamin_c_mg": 100,
+                "data_quality": {"status": "complete"},
+            },
+        }
+    )
+
+    targets_used = result["module_details"]["basic_nutrition_quality"]["targets_used"]
+    assert targets_used["protein_g"] == 75
+    assert targets_used["iron_mg"] == 20

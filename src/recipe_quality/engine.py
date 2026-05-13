@@ -43,7 +43,11 @@ def evaluate_daily_diet(input_data: dict[str, Any]) -> dict[str, Any]:
             record_quality=input_data.get("record_quality"),
         )
 
-    basic, basic_details = score_basic_nutrition(daily_totals, daily_targets)
+    basic, basic_details = score_basic_nutrition(
+        daily_totals,
+        daily_targets,
+        target_user=input_data.get("target_user"),
+    )
     limiting, limiting_details = score_limiting_components(daily_totals, daily_targets)
     cooking, cooking_details = score_cooking_processing_safety(input_data)
     intake, intake_details = score_daily_intake_fit(daily_totals, daily_targets)

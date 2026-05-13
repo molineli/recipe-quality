@@ -1,14 +1,6 @@
 from __future__ import annotations
 
-
-DEFAULT_TARGETS = {
-    "protein_g": 60.0,
-    "fiber_g": 25.0,
-    "calcium_mg": 800.0,
-    "iron_mg": 12.0,
-    "potassium_mg": 2000.0,
-    "vitamin_c_mg": 100.0,
-}
+from recipe_quality.targets import resolve_basic_nutrition_targets
 
 FOOD_GROUP_TARGETS = {
     "grains_and_tubers": {"weight": 2.0, "target_g": 250.0},
@@ -23,9 +15,13 @@ FOOD_GROUP_TARGETS = {
 }
 
 
-def score_basic_nutrition(daily_totals: dict, daily_targets: dict | None = None) -> tuple[float, dict]:
+def score_basic_nutrition(
+    daily_totals: dict,
+    daily_targets: dict | None = None,
+    target_user: dict | None = None,
+) -> tuple[float, dict]:
     """计算 A 基础营养质量的初版分数和明细。"""
-    targets = {**DEFAULT_TARGETS, **(daily_targets or {})}
+    targets = resolve_basic_nutrition_targets(daily_targets, target_user)
     food_group_score, food_group_details = score_food_group_coverage(daily_totals)
     protein = 6 * min((daily_totals.get("protein_g") or 0) / targets["protein_g"], 1)
     fiber = 6 * min((daily_totals.get("fiber_g") or 0) / targets["fiber_g"], 1)
@@ -40,6 +36,7 @@ def score_basic_nutrition(daily_totals: dict, daily_targets: dict | None = None)
         "protein_adequacy": round(protein, 2),
         "fiber_adequacy": round(fiber, 2),
         "micronutrient_coverage": round(micro, 2),
+        "targets_used": targets,
     }
     return round(food_group_score + protein + fiber + micro, 2), details
 
