@@ -66,6 +66,9 @@ class ResolvedFoodItem:
     food_group: str | None = None
     classification_source: str | None = None
     classification_confidence: float | None = None
+    processing_level: str | None = None
+    processing_level_source: str | None = None
+    processing_level_confidence: float | None = None
     fatsecret_food_id: str | None = None
     fatsecret_food_name: str | None = None
     serving_used: str | None = None
@@ -87,6 +90,9 @@ class ResolvedFoodItem:
             "food_group": self.food_group,
             "classification_source": self.classification_source,
             "classification_confidence": self.classification_confidence,
+            "processing_level": self.processing_level,
+            "processing_level_source": self.processing_level_source,
+            "processing_level_confidence": self.processing_level_confidence,
             "fatsecret_food_id": self.fatsecret_food_id,
             "fatsecret_food_name": self.fatsecret_food_name,
             "serving_used": self.serving_used,

@@ -1,10 +1,41 @@
 cooking_method_score:
   steam: 10
   boil: 10
+  blanch: 10
+  poach: 10
+  stew_clear: 9
+  soup: 9
+  porridge_or_cooked_grain: 9
+  pressure_cook: 9
+  microwave: 9
+  cold_mix_low_oil: 9
   ready_to_eat_minimal: 9
+  sous_vide_safe: 8
+  bake_low_oil: 8
+  air_fry: 8
+  pan_fry_low_oil: 8
   stir_fry_low_oil: 8
   stir_fry: 7
+  braise_light: 7
+  griddle_low_oil: 6
+  marinate_low_sodium: 6
+  hotpot_clear: 6
+  pan_fry: 5
+  high_heat_stir_fry: 5
+  grill_or_roast: 5
+  braise_regular: 5
+  cold_mix_heavy_sauce: 5
+  dry_stir_fry: 4
+  fermented_or_pickled_ready_to_eat: 4
+  dry_pot: 3
+  braise_heavy_oil: 3
+  sugar_glazed: 3
+  smoke: 2
+  salt_baked_or_salt_cured: 2
+  candied: 2
   deep_fry: 2
+  reused_oil_fry: 1
+  heavy_grill: 1
   charred: 0
+  raw_high_risk: 0
   unknown_cooking_method: 6
-

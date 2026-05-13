@@ -70,6 +70,7 @@ def aggregate_daily_totals(
     }
     totals["food_group_amounts_g"] = food_group_amounts
     totals["food_group_count"] = len(effective_groups)
+    totals["ingredient_records"] = [item.to_dict() for item in resolved_items]
     totals["dish_records"] = enrich_dish_records(dish_records or [], dish_nutrients)
     totals["data_quality"] = {
         "unresolved_items": unresolved_items,

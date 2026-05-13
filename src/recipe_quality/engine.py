@@ -32,6 +32,9 @@ def evaluate_daily_diet(input_data: dict[str, Any]) -> dict[str, Any]:
                 food_group=item.get("food_group"),
                 classification_source=item.get("classification_source"),
                 classification_confidence=item.get("classification_confidence"),
+                processing_level=item.get("processing_level"),
+                processing_level_source=item.get("processing_level_source"),
+                processing_level_confidence=item.get("processing_level_confidence"),
                 nutrients=Nutrients.from_mapping(item.get("nutrients")),
                 nutrition_estimation_status=item.get("nutrition_estimation_status", "resolved"),
             )
@@ -50,7 +53,7 @@ def evaluate_daily_diet(input_data: dict[str, Any]) -> dict[str, Any]:
         target_user=input_data.get("target_user"),
     )
     limiting, limiting_details = score_limiting_components(daily_totals, resolved_targets)
-    cooking, cooking_details = score_cooking_processing_safety(input_data)
+    cooking, cooking_details = score_cooking_processing_safety(daily_totals)
     intake, intake_details = score_daily_intake_fit(daily_totals, resolved_targets)
     personalization, personalization_details = score_personalization(input_data)
 

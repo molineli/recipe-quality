@@ -1,0 +1,6 @@
+processing_level_score:
+  unprocessed: 7
+  minimally_processed: 5
+  processed: 3
+  ultra_processed: 0
+  unknown_processing_level: 4

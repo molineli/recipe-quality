@@ -131,3 +131,42 @@ def test_engine_resolves_energy_target_from_user_profile():
     assert result["daily_targets"]["energy_kcal"] == 1787.84
     assert round(targets_used["protein_g"], 2) == 67.04
     assert targets_used["iron_mg"] == 20
+
+
+def test_engine_scores_c_module_from_ai_labels_without_ai_scores():
+    result = evaluate_daily_diet(
+        {
+            "meals": [
+                {
+                    "meal_name": "lunch",
+                    "dishes": [
+                        {
+                            "dish_name": "steamed fish",
+                            "cooking_method": "steam",
+                            "cooking_method_source": "ai",
+                            "cooking_method_confidence": 0.9,
+                            "processing_level": "minimally_processed",
+                            "ingredients": [
+                                {
+                                    "name": "fish",
+                                    "amount_g": 100,
+                                    "food_group": "aquatic_products",
+                                    "processing_level": "unprocessed",
+                                    "processing_level_source": "ai",
+                                    "processing_level_confidence": 0.9,
+                                    "nutrients": {"energy_kcal": 100, "protein_g": 20},
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ],
+            "record_quality": {"completeness": "complete"},
+        }
+    )
+
+    c_details = result["module_details"]["cooking_processing_safety"]
+    assert result["module_scores"]["cooking_processing_safety"] == 15
+    assert c_details["dish_scores"][0]["method_used"] == "steam"
+    assert c_details["ingredient_processing_scores"][0]["level_used"] == "unprocessed"
+    assert "processing_level" not in result["daily_totals"]["dish_records"][0]
