@@ -13,11 +13,6 @@
     "dietary_restrictions": [],
     "habit_pattern": "chinese_home_meals"
   },
-  "daily_targets": {
-    "sodium_mg_limit": 2000,
-    "cooking_oil_g_limit": 25,
-    "added_sugar_g_limit": 25
-  },
   "meals": [
     {
       "meal_name": "breakfast",

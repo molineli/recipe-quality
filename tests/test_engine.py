@@ -5,7 +5,6 @@ def test_engine_applies_sodium_grade_cap():
     """验证钠超过 2 倍上限时会触发等级封顶规则。"""
     result = evaluate_daily_diet(
         {
-            "daily_targets": {"energy_kcal": 2000, "sodium_mg_limit": 2000},
             "daily_totals": {
                 "energy_kcal": 2000,
                 "protein_g": 60,
@@ -35,7 +34,6 @@ def test_engine_accepts_meals_dishes_ingredients_shape():
     """验证评分入口支持 meals→dishes→ingredients 的统一输入结构。"""
     result = evaluate_daily_diet(
         {
-            "daily_targets": {"energy_kcal": 2000},
             "meals": [
                 {
                     "meal_name": "lunch",
@@ -67,7 +65,7 @@ def test_engine_accepts_meals_dishes_ingredients_shape():
 
     coverage = result["module_details"]["basic_nutrition_quality"]["food_group_coverage"]
     assert result["daily_totals"]["food_group_amounts_g"]["vegetables"] == 200
-    assert coverage["group_scores"]["vegetables"] == 2.0
+    assert coverage["group_scores"]["vegetables"] == 1.5
 
 
 def test_engine_passes_target_user_to_basic_nutrition_targets():
@@ -75,7 +73,6 @@ def test_engine_passes_target_user_to_basic_nutrition_targets():
     result = evaluate_daily_diet(
         {
             "target_user": {"sex": "female"},
-            "daily_targets": {"energy_kcal": 2000},
             "daily_totals": {
                 "energy_kcal": 2000,
                 "protein_g": 75,
@@ -97,4 +94,40 @@ def test_engine_passes_target_user_to_basic_nutrition_targets():
 
     targets_used = result["module_details"]["basic_nutrition_quality"]["targets_used"]
     assert targets_used["protein_g"] == 75
+    assert targets_used["iron_mg"] == 20
+
+
+def test_engine_resolves_energy_target_from_user_profile():
+    """验证 engine 会根据 target_user 估算每日能量并用于 A/D/封顶模块。"""
+    result = evaluate_daily_diet(
+        {
+            "target_user": {
+                "sex": "female",
+                "age": 30,
+                "height_cm": 165,
+                "weight_kg": 58,
+                "activity_level": "light",
+            },
+            "daily_totals": {
+                "energy_kcal": 1788,
+                "protein_g": 67.04,
+                "fat_g": 55,
+                "saturated_fat_g": 10,
+                "carbohydrate_g": 240,
+                "fiber_g": 25,
+                "sodium_mg": 1000,
+                "cooking_oil_g": 20,
+                "added_sugar_g": 0,
+                "calcium_mg": 800,
+                "iron_mg": 20,
+                "potassium_mg": 2000,
+                "vitamin_c_mg": 100,
+                "data_quality": {"status": "complete"},
+            },
+        }
+    )
+
+    targets_used = result["module_details"]["basic_nutrition_quality"]["targets_used"]
+    assert result["daily_targets"]["energy_kcal"] == 1787.84
+    assert round(targets_used["protein_g"], 2) == 67.04
     assert targets_used["iron_mg"] == 20

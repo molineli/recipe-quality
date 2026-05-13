@@ -11,11 +11,12 @@ from recipe_quality.scoring.daily_intake_fit import score_daily_intake_fit
 from recipe_quality.scoring.grade import apply_grade_caps, evaluate_grade_caps, score_to_grade
 from recipe_quality.scoring.limiting_components import score_limiting_components
 from recipe_quality.scoring.personalization import score_personalization
+from recipe_quality.targets import resolve_daily_targets
 
 
 def evaluate_daily_diet(input_data: dict[str, Any]) -> dict[str, Any]:
     """执行全天饮食评分主流程，返回总分、等级、模块分和封顶信息。"""
-    daily_targets = input_data.get("daily_targets") or {}
+    resolved_targets = resolve_daily_targets(input_data.get("target_user"))
     if "daily_totals" in input_data:
         daily_totals = input_data["daily_totals"]
     else:
@@ -45,12 +46,12 @@ def evaluate_daily_diet(input_data: dict[str, Any]) -> dict[str, Any]:
 
     basic, basic_details = score_basic_nutrition(
         daily_totals,
-        daily_targets,
+        resolved_targets,
         target_user=input_data.get("target_user"),
     )
-    limiting, limiting_details = score_limiting_components(daily_totals, daily_targets)
+    limiting, limiting_details = score_limiting_components(daily_totals, resolved_targets)
     cooking, cooking_details = score_cooking_processing_safety(input_data)
-    intake, intake_details = score_daily_intake_fit(daily_totals, daily_targets)
+    intake, intake_details = score_daily_intake_fit(daily_totals, resolved_targets)
     personalization, personalization_details = score_personalization(input_data)
 
     module_scores = {
@@ -62,7 +63,7 @@ def evaluate_daily_diet(input_data: dict[str, Any]) -> dict[str, Any]:
     }
     total_score = round(sum(module_scores.values()), 2)
     raw_grade = score_to_grade(total_score)
-    grade_caps = evaluate_grade_caps(daily_totals, daily_targets)
+    grade_caps = evaluate_grade_caps(daily_totals, resolved_targets)
     final_grade = apply_grade_caps(raw_grade, grade_caps)
     return {
         "evaluation_scope": input_data.get("evaluation_scope", "whole_day"),
@@ -79,5 +80,6 @@ def evaluate_daily_diet(input_data: dict[str, Any]) -> dict[str, Any]:
             "personalization_feasibility": personalization_details,
         },
         "daily_totals": daily_totals,
+        "daily_targets": resolved_targets,
         "grade_caps": grade_caps,
     }

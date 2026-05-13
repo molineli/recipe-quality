@@ -27,14 +27,14 @@ def apply_grade_caps(raw_grade: str, caps: list[dict]) -> str:
     return final_grade
 
 
-def evaluate_grade_caps(daily_totals: dict, daily_targets: dict | None = None) -> list[dict]:
+def evaluate_grade_caps(daily_totals: dict, resolved_targets: dict | None = None) -> list[dict]:
     """检查能量、限制性成分和数据质量等最高等级封顶规则。"""
     targets = {
         "energy_kcal": 2000.0,
         "sodium_mg_limit": 2000.0,
         "cooking_oil_g_limit": 25.0,
         "added_sugar_g_limit": 25.0,
-        **(daily_targets or {}),
+        **(resolved_targets or {}),
     }
     caps: list[dict] = []
     energy = daily_totals.get("energy_kcal") or 0

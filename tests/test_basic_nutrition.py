@@ -1,3 +1,4 @@
+from recipe_quality.scoring.basic_nutrition import FOOD_GROUP_TARGETS, score_food_group_coverage
 from recipe_quality.targets import resolve_basic_nutrition_targets
 
 
@@ -36,8 +37,8 @@ def test_resolve_targets_defaults_unknown_sex_to_male_iron_target():
     assert targets["iron_mg"] == 12
 
 
-def test_resolve_targets_allows_explicit_daily_target_overrides():
-    """验证 daily_targets 中显式目标会覆盖动态默认目标。"""
+def test_resolve_targets_allows_resolved_target_overrides():
+    """验证已解析目标会覆盖 A 模块动态默认目标。"""
     targets = resolve_basic_nutrition_targets(
         {"energy_kcal": 2000, "protein_g": 60, "iron_mg": 18},
         {"sex": "female"},
@@ -45,3 +46,17 @@ def test_resolve_targets_allows_explicit_daily_target_overrides():
 
     assert targets["protein_g"] == 60
     assert targets["iron_mg"] == 18
+
+
+def test_food_group_targets_are_loaded_from_config():
+    """验证 A1 食物组目标值来自 configs/food_groups.yaml。"""
+    assert FOOD_GROUP_TARGETS["vegetables"]["target_g"] == 400
+
+    _, details = score_food_group_coverage(
+        {
+            "food_group_amounts_g": {"vegetables": 200},
+            "food_group_count": 1,
+        }
+    )
+
+    assert details["group_scores"]["vegetables"] == 1.5

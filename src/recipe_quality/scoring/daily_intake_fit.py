@@ -3,10 +3,10 @@ from __future__ import annotations
 
 def score_daily_intake_fit(
     daily_totals: dict,
-    daily_targets: dict | None = None,
+    resolved_targets: dict | None = None,
 ) -> tuple[float, dict[str, float]]:
     """计算 D 全天摄入总量适配分数和明细。"""
-    target_energy = float((daily_targets or {}).get("energy_kcal", 2000))
+    target_energy = float((resolved_targets or {}).get("energy_kcal", 2000))
     energy = float(daily_totals.get("energy_kcal") or 0)
     energy_score = score_energy_match(energy / target_energy if target_energy else 0)
     macro_score = score_macro_distribution(daily_totals)

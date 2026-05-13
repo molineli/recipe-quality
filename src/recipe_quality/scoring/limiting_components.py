@@ -12,10 +12,10 @@ DEFAULT_LIMITS = {
 
 def score_limiting_components(
     daily_totals: dict,
-    daily_targets: dict | None = None,
+    resolved_targets: dict | None = None,
 ) -> tuple[float, dict[str, float]]:
     """计算 B 限制性成分控制分数和明细。"""
-    targets = {**DEFAULT_LIMITS, **(daily_targets or {})}
+    targets = {**DEFAULT_LIMITS, **(resolved_targets or {})}
     sodium = linear_limit_score(daily_totals.get("sodium_mg"), targets["sodium_mg_limit"], 9)
     oil = linear_limit_score(daily_totals.get("cooking_oil_g"), targets["cooking_oil_g_limit"], 7)
     sugar = linear_limit_score(daily_totals.get("added_sugar_g"), targets["added_sugar_g_limit"], 5)

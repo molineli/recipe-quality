@@ -26,6 +26,3 @@ food_groups:
   nuts:
     weight: 1
     target_g: 10
-diversity:
-  weight: 2
-  min_effective_amount_g: 10

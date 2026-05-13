@@ -1,27 +1,19 @@
 from __future__ import annotations
 
+from recipe_quality.config_loader import load_food_group_targets
 from recipe_quality.targets import resolve_basic_nutrition_targets
 
-FOOD_GROUP_TARGETS = {
-    "grains_and_tubers": {"weight": 2.0, "target_g": 250.0},
-    "vegetables": {"weight": 3.0, "target_g": 300.0},
-    "fruits": {"weight": 3.0, "target_g": 200.0},
-    "livestock_poultry_meat": {"weight": 2.0, "target_g": 75.0},
-    "aquatic_products": {"weight": 2.0, "target_g": 75.0},
-    "eggs": {"weight": 2.0, "target_g": 50.0},
-    "dairy": {"weight": 2.0, "target_g": 300.0},
-    "soy_products": {"weight": 1.0, "target_g": 25.0},
-    "nuts": {"weight": 1.0, "target_g": 10.0},
-}
+
+FOOD_GROUP_TARGETS = load_food_group_targets()
 
 
 def score_basic_nutrition(
     daily_totals: dict,
-    daily_targets: dict | None = None,
+    resolved_targets: dict | None = None,
     target_user: dict | None = None,
 ) -> tuple[float, dict]:
-    """计算 A 基础营养质量的初版分数和明细。"""
-    targets = resolve_basic_nutrition_targets(daily_targets, target_user)
+    """计算 A 基础营养质量总分，并返回各子项明细。"""
+    targets = resolve_basic_nutrition_targets(resolved_targets, target_user)
     food_group_score, food_group_details = score_food_group_coverage(daily_totals)
     protein = 6 * min((daily_totals.get("protein_g") or 0) / targets["protein_g"], 1)
     fiber = 6 * min((daily_totals.get("fiber_g") or 0) / targets["fiber_g"], 1)
@@ -42,7 +34,7 @@ def score_basic_nutrition(
 
 
 def score_food_group_coverage(daily_totals: dict) -> tuple[float, dict]:
-    """按新版 A1 权重计算食物组覆盖度 20 分。"""
+    """按配置中的食物组权重和目标克数计算 A1 食物组覆盖度。"""
     amounts = daily_totals.get("food_group_amounts_g") or {}
     group_scores: dict[str, float] = {}
     for group, config in FOOD_GROUP_TARGETS.items():
@@ -68,7 +60,7 @@ def score_food_group_coverage(daily_totals: dict) -> tuple[float, dict]:
 
 
 def score_diversity(count: int) -> float:
-    """按有效食物类别数量计算 A1 多样性得分。"""
+    """根据有效食物组数量计算 A1 多样性附加分。"""
     if count >= 8:
         return 2.0
     if count >= 6:
