@@ -3,5 +3,7 @@
 .env
 __pycache__/
 .pytest_cache/
+.cache/
+pytest-cache-files-*/
 .venv/
 *.pyc
