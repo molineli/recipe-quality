@@ -111,3 +111,67 @@ def test_personalization_uses_explicit_habit_label_and_structured_feasibility_fa
         "prep_time_over_60_min",
         "complex_steps",
     ]
+
+
+def test_liked_food_score_prefers_ai_liked_food_matches():
+    score, details = score_personalization(
+        {
+            "target_user": {"liked_foods": ["tomato"], "habit_pattern": "chinese_home_meals"},
+            "meals": [
+                {
+                    "meal_name": "lunch",
+                    "dishes": [
+                        {
+                            "dish_name": "alias dish",
+                            "cooking_method": "steam",
+                            "ingredients": [
+                                {
+                                    "name": "red vegetable",
+                                    "amount_g": 100,
+                                    "food_group": "vegetables",
+                                    "liked_food_matches": ["tomato"],
+                                    "liked_food_use_quality": "reasonable",
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ],
+        }
+    )
+
+    assert details["liked_foods_reasonable_use"] == 1.5
+    assert details["liked_foods_details"]["matched_foods"][0]["match_source"] == "ai_label"
+    assert score == 5.5
+
+
+def test_ai_risky_liked_food_quality_limits_e1_score():
+    score, details = score_personalization(
+        {
+            "target_user": {"liked_foods": ["potato"], "habit_pattern": "chinese_home_meals"},
+            "meals": [
+                {
+                    "meal_name": "dinner",
+                    "dishes": [
+                        {
+                            "dish_name": "sweet potato",
+                            "cooking_method": "steam",
+                            "ingredients": [
+                                {
+                                    "name": "potato",
+                                    "amount_g": 150,
+                                    "food_group": "grains_and_tubers",
+                                    "liked_food_matches": ["potato"],
+                                    "liked_food_use_quality": "risky",
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ],
+        }
+    )
+
+    assert details["liked_foods_reasonable_use"] == 1
+    assert details["liked_foods_details"]["risk_limited"] is True
+    assert score == 5

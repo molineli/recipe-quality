@@ -5,6 +5,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query
 
 from recipe_quality.aggregator import resolve_and_aggregate
+from recipe_quality.ai_annotation import AIAnnotationError, annotate_recipe_input
 from recipe_quality.engine import evaluate_daily_diet
 from recipe_quality.fatsecret import FatSecretClient, FatSecretError, FatSecretResolver
 from recipe_quality.normalizer import normalize_recipe_input
@@ -41,6 +42,19 @@ def nutrition_resolve(payload: dict[str, Any]) -> dict[str, Any]:
             record_quality=payload.get("record_quality"),
         )
     except FatSecretError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+@router.post("/ai/annotate")
+def ai_annotate(payload: dict[str, Any]) -> dict[str, Any]:
+    """Use AI to annotate labels needed by C1/C2/E1/E2/E3 scoring."""
+    try:
+        annotated = annotate_recipe_input(payload)
+        return {
+            "annotated_input": annotated,
+            "ai_annotation_meta": annotated.get("ai_annotation_meta", {}),
+        }
+    except AIAnnotationError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 

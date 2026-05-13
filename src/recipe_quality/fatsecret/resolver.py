@@ -25,6 +25,9 @@ class FatSecretResolver:
             "food_group": item.get("food_group"),
             "classification_source": item.get("classification_source"),
             "classification_confidence": item.get("classification_confidence"),
+            "processing_level": item.get("processing_level"),
+            "processing_level_source": item.get("processing_level_source"),
+            "processing_level_confidence": item.get("processing_level_confidence"),
         }
         if not name or amount_g <= 0:
             return ResolvedFoodItem(

@@ -124,19 +124,29 @@ def score_liked_foods(
         name = str(ingredient.get("name") or "").strip()
         if not name:
             continue
-        matched_likes = [liked for liked in liked_foods if _food_name_matches(name, liked)]
+        matched_likes = _string_list(ingredient.get("liked_food_matches"))
+        match_source = "ai_label" if matched_likes else "name_fallback"
+        if not matched_likes:
+            matched_likes = [liked for liked in liked_foods if _food_name_matches(name, liked)]
         if not matched_likes:
             continue
         cooking_method = dish_method_by_name.get(ingredient.get("dish_name"))
         processing_level = ingredient.get("processing_level")
-        risky = cooking_method in UNHEALTHY_LIKED_FOOD_METHODS or processing_level == "ultra_processed"
+        use_quality = ingredient.get("liked_food_use_quality")
+        risky = (
+            use_quality == "risky"
+            or cooking_method in UNHEALTHY_LIKED_FOOD_METHODS
+            or processing_level == "ultra_processed"
+        )
         matched.append(
             {
                 "name": name,
                 "matched_liked_foods": matched_likes,
+                "match_source": match_source,
                 "dish_name": ingredient.get("dish_name"),
                 "cooking_method": cooking_method,
                 "processing_level": processing_level,
+                "liked_food_use_quality": use_quality,
                 "risky_use": risky,
             }
         )

@@ -44,6 +44,7 @@ def normalize_recipe_input(payload: dict[str, Any]) -> dict[str, Any]:
                     "cooking_method": dish.get("cooking_method", "unknown_cooking_method"),
                     "cooking_method_source": dish.get("cooking_method_source"),
                     "cooking_method_confidence": dish.get("cooking_method_confidence"),
+                    "cooking_method_reason": dish.get("cooking_method_reason"),
                     "food_safety_risk_tags": dish.get("food_safety_risk_tags", []) or [],
                     "condiments": dish_condiments,
                 }
@@ -110,6 +111,9 @@ def _ingredient_record(
         "processing_level": ingredient.get("processing_level"),
         "processing_level_source": ingredient.get("processing_level_source"),
         "processing_level_confidence": ingredient.get("processing_level_confidence"),
+        "processing_level_reason": ingredient.get("processing_level_reason"),
+        "liked_food_matches": ingredient.get("liked_food_matches"),
+        "liked_food_use_quality": ingredient.get("liked_food_use_quality"),
         "fatsecret_food_id": ingredient.get("fatsecret_food_id"),
         "nutrients": ingredient.get("nutrients"),
         "nutrition_estimation_status": ingredient.get("nutrition_estimation_status"),
