@@ -14,9 +14,6 @@
     "habit_pattern": "chinese_home_meals"
   },
   "daily_targets": {
-    "energy_kcal": 2000,
-    "protein_g": 60,
-    "fiber_g": 25,
     "sodium_mg_limit": 2000,
     "cooking_oil_g_limit": 25,
     "added_sugar_g_limit": 25
