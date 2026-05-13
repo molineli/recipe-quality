@@ -5,6 +5,7 @@ def score_daily_intake_fit(
     daily_totals: dict,
     daily_targets: dict | None = None,
 ) -> tuple[float, dict[str, float]]:
+    """计算 D 全天摄入总量适配分数和明细。"""
     target_energy = float((daily_targets or {}).get("energy_kcal", 2000))
     energy = float(daily_totals.get("energy_kcal") or 0)
     energy_score = score_energy_match(energy / target_energy if target_energy else 0)
@@ -17,6 +18,7 @@ def score_daily_intake_fit(
 
 
 def score_energy_match(ratio: float) -> float:
+    """根据实际能量与目标能量的比例计算 D1 能量匹配得分。"""
     distance = abs(ratio - 1)
     if distance <= 0.05:
         return 8.0
@@ -30,6 +32,7 @@ def score_energy_match(ratio: float) -> float:
 
 
 def score_macro_distribution(daily_totals: dict) -> float:
+    """根据三大营养素供能比计算 D2 供能结构得分。"""
     energy = daily_totals.get("energy_kcal") or 0
     if energy <= 0:
         return 0.0
@@ -50,5 +53,5 @@ def score_macro_distribution(daily_totals: dict) -> float:
 
 
 def _interpolate(value: float, x0: float, x1: float, y0: float, y1: float) -> float:
+    """在两个区间端点之间做线性插值。"""
     return y0 + (value - x0) * (y1 - y0) / (x1 - x0)
-

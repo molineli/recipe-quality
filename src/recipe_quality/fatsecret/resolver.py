@@ -10,17 +10,28 @@ from recipe_quality.models import ResolvedFoodItem
 
 class FatSecretResolver:
     def __init__(self, client: FatSecretClient):
+        """保存 FatSecret 客户端，用于后续搜索和详情查询。"""
         self.client = client
 
     def resolve_item(self, item: dict[str, Any]) -> ResolvedFoodItem:
+        """解析单个食物项，返回匹配结果、serving 信息和换算后的营养值。"""
         name = str(item.get("name") or "").strip()
         amount_g = float(item.get("amount_g") or 0)
         meal_name = item.get("meal_name")
+        common_fields = {
+            "ingredient_id": item.get("ingredient_id"),
+            "dish_name": item.get("dish_name"),
+            "edible": item.get("edible", True),
+            "food_group": item.get("food_group"),
+            "classification_source": item.get("classification_source"),
+            "classification_confidence": item.get("classification_confidence"),
+        }
         if not name or amount_g <= 0:
             return ResolvedFoodItem(
                 name=name,
                 amount_g=amount_g,
                 meal_name=meal_name,
+                **common_fields,
                 error="name and positive amount_g are required",
             )
 
@@ -35,6 +46,7 @@ class FatSecretResolver:
                         name=name,
                         amount_g=amount_g,
                         meal_name=meal_name,
+                        **common_fields,
                         candidates=[],
                         error="no FatSecret candidates found",
                     )
@@ -48,6 +60,7 @@ class FatSecretResolver:
                     name=name,
                     amount_g=amount_g,
                     meal_name=meal_name,
+                    **common_fields,
                     fatsecret_food_id=food_id,
                     fatsecret_food_name=food.get("food_name"),
                     candidates=candidates,
@@ -66,6 +79,7 @@ class FatSecretResolver:
                 name=name,
                 amount_g=amount_g,
                 meal_name=meal_name,
+                **common_fields,
                 fatsecret_food_id=food_id,
                 fatsecret_food_name=food.get("food_name"),
                 serving_used=serving_label(serving),
@@ -76,16 +90,25 @@ class FatSecretResolver:
                 error=error,
             )
         except FatSecretError as exc:
-            return ResolvedFoodItem(name=name, amount_g=amount_g, meal_name=meal_name, error=str(exc))
+            return ResolvedFoodItem(
+                name=name,
+                amount_g=amount_g,
+                meal_name=meal_name,
+                **common_fields,
+                error=str(exc),
+            )
 
     def resolve_items(self, items: list[dict[str, Any]]) -> list[ResolvedFoodItem]:
+        """批量解析食物项列表。"""
         return [self.resolve_item(item) for item in items]
 
     @staticmethod
     def rank_candidates(query: str, foods: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """按保守策略对 FatSecret 搜索候选排序，优先 Generic 和名称匹配。"""
         normalized_query = query.casefold()
 
         def score(food: dict[str, Any]) -> tuple[int, str]:
+            """计算单个候选食物的排序键。"""
             name = str(food.get("food_name") or "")
             food_type = str(food.get("food_type") or "")
             lowered_name = name.casefold()
@@ -104,10 +127,12 @@ class FatSecretResolver:
 
 
 def choose_serving(servings: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """从 serving 列表中选择最适合按克数换算的 serving。"""
     if not servings:
         return None
 
     def score(serving: dict[str, Any]) -> tuple[int, str]:
+        """计算 serving 的排序键，优先 100g/100ml。"""
         amount = serving_metric_amount(serving)
         label = serving_label(serving).lower()
         if amount == 100:
@@ -121,10 +146,10 @@ def choose_serving(servings: list[dict[str, Any]]) -> dict[str, Any] | None:
 
 
 def match_confidence(query: str, food: dict[str, Any], candidates: list[dict[str, Any]]) -> str:
+    """根据名称和候选类型估算食物匹配置信度。"""
     name = str(food.get("food_name") or "")
     if name.casefold() == query.casefold():
         return "high"
     if candidates and str(candidates[0].get("food_type") or "").casefold() == "generic":
         return "medium"
     return "low"
-

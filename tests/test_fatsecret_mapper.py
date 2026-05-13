@@ -2,6 +2,7 @@ from recipe_quality.fatsecret.mapper import scale_serving_to_amount, serving_met
 
 
 def test_serving_to_nutrients_maps_known_fields():
+    """验证 FatSecret serving 字段能正确映射为内部营养字段。"""
     serving = {
         "calories": "130",
         "protein": "2.7",
@@ -25,6 +26,7 @@ def test_serving_to_nutrients_maps_known_fields():
 
 
 def test_scale_serving_to_amount_uses_metric_serving_amount():
+    """验证 serving 营养值会按 metric_serving_amount 换算到实际克数。"""
     serving = {
         "metric_serving_amount": "100",
         "metric_serving_unit": "g",
@@ -40,5 +42,5 @@ def test_scale_serving_to_amount_uses_metric_serving_amount():
 
 
 def test_serving_metric_amount_handles_100g_description():
+    """验证缺少 metric 字段时可从 100 g 描述中推断基准重量。"""
     assert serving_metric_amount({"serving_description": "100 g"}) == 100
-

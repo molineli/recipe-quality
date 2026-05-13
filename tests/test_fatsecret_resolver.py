@@ -3,6 +3,7 @@ from recipe_quality.fatsecret.resolver import FatSecretResolver, choose_serving
 
 class FakeClient:
     def search_foods(self, query, max_results=10):
+        """模拟 FatSecret 搜索接口返回品牌和通用候选。"""
         return {
             "foods": {
                 "food": [
@@ -13,6 +14,7 @@ class FakeClient:
         }
 
     def get_food(self, food_id):
+        """模拟 FatSecret 食物详情接口返回多个 serving。"""
         assert food_id == "1"
         return {
             "food": {
@@ -40,6 +42,7 @@ class FakeClient:
 
 
 def test_resolver_prefers_generic_candidate_and_100g_serving():
+    """验证解析器优先选择 Generic 候选和 100g serving。"""
     resolver = FatSecretResolver(FakeClient())
 
     resolved = resolver.resolve_item({"name": "rice", "amount_g": 200})
@@ -52,4 +55,5 @@ def test_resolver_prefers_generic_candidate_and_100g_serving():
 
 
 def test_choose_serving_returns_none_when_no_metric_serving():
+    """验证没有可按克数换算的 serving 时返回 None。"""
     assert choose_serving([{"serving_description": "1 serving", "calories": "100"}]) is None

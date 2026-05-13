@@ -16,14 +16,15 @@ class FatSecretConfig:
     client_id: str
     client_secret: str
     scope: str = "basic"
-    region: str | None = None
-    language: str | None = None
+    region: str | None = "US"
+    language: str | None = "zh"
     token_url: str = "https://oauth.fatsecret.com/connect/token"
     api_url: str = "https://platform.fatsecret.com/rest/server.api"
     timeout_seconds: float = 20.0
 
     @classmethod
     def from_env(cls) -> "FatSecretConfig":
+        """从环境变量或 .env 文件读取 FatSecret 配置。"""
         try:
             from dotenv import load_dotenv
         except ModuleNotFoundError:
@@ -47,6 +48,7 @@ class FatSecretConfig:
 
 class FatSecretClient:
     def __init__(self, config: FatSecretConfig | None = None, session: Any | None = None):
+        """初始化 FatSecret 客户端，可注入 session 以便测试。"""
         self.config = config or FatSecretConfig.from_env()
         if session is None:
             try:
@@ -62,6 +64,7 @@ class FatSecretClient:
         self._token_expires_at = 0.0
 
     def get_access_token(self) -> str:
+        """获取并缓存 FatSecret OAuth2 access token。"""
         if self._access_token and time.time() < self._token_expires_at - 60:
             return self._access_token
 
@@ -86,6 +89,7 @@ class FatSecretClient:
         return token
 
     def search_foods(self, query: str, max_results: int = 10) -> dict[str, Any]:
+        """调用 foods.search.v5 通过自然语言搜索食物。"""
         params: dict[str, Any] = {
             "method": "foods.search.v5",
             "format": "json",
@@ -96,6 +100,7 @@ class FatSecretClient:
         return self._get(params)
 
     def get_food(self, food_id: str) -> dict[str, Any]:
+        """调用 food.get.v5 获取指定id食物详情。"""
         params: dict[str, Any] = {
             "method": "food.get.v5",
             "format": "json",
@@ -105,6 +110,7 @@ class FatSecretClient:
         return self._get(params)
 
     def _get(self, params: dict[str, Any]) -> dict[str, Any]:
+        """向 FatSecret REST API 发送 GET 请求并处理错误响应。"""
         response = self.session.get(
             self.config.api_url,
             headers={"Authorization": f"Bearer {self.get_access_token()}"},
@@ -119,6 +125,7 @@ class FatSecretClient:
         return payload
 
     def _add_localization(self, params: dict[str, Any]) -> None:
+        """按配置向请求参数追加 region/language 本地化选项。"""
         if self.config.region:
             params["region"] = self.config.region
         if self.config.language:
@@ -126,6 +133,7 @@ class FatSecretClient:
 
     @staticmethod
     def _raise_for_response(response: Any, message: str) -> None:
+        """将 HTTP 错误响应转换为 FatSecretError。"""
         if response.status_code >= 400:
             try:
                 detail = response.json()

@@ -14,6 +14,7 @@ def score_limiting_components(
     daily_totals: dict,
     daily_targets: dict | None = None,
 ) -> tuple[float, dict[str, float]]:
+    """计算 B 限制性成分控制分数和明细。"""
     targets = {**DEFAULT_LIMITS, **(daily_targets or {})}
     sodium = linear_limit_score(daily_totals.get("sodium_mg"), targets["sodium_mg_limit"], 9)
     oil = linear_limit_score(daily_totals.get("cooking_oil_g"), targets["cooking_oil_g_limit"], 7)
@@ -29,6 +30,7 @@ def score_limiting_components(
 
 
 def score_saturated_fat(daily_totals: dict) -> float:
+    """按饱和脂肪供能比计算 B4 得分。"""
     saturated_fat_g = daily_totals.get("saturated_fat_g")
     energy_kcal = daily_totals.get("energy_kcal")
     if not saturated_fat_g or not energy_kcal:
@@ -39,4 +41,3 @@ def score_saturated_fat(daily_totals: dict) -> float:
     if ratio >= 0.15:
         return 0.0
     return 4 * (1 - (ratio - 0.10) / 0.05)
-

@@ -10,6 +10,7 @@ from recipe_quality.fatsecret import FatSecretClient
 
 
 def main() -> int:
+    """命令行入口：搜索 FatSecret 食物候选并打印 JSON 结果。"""
     if len(sys.argv) < 2:
         print("Usage: python scripts/fatsecret_search.py <query> [max_results]", file=sys.stderr)
         return 2
@@ -22,4 +23,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

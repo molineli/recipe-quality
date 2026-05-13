@@ -5,6 +5,7 @@ GRADE_ORDER = ["A", "B", "C", "D", "E"]
 
 
 def score_to_grade(score: float) -> str:
+    """将百分制总分转换为 A/B/C/D/E 等级。"""
     if score >= 90:
         return "A"
     if score >= 80:
@@ -17,6 +18,7 @@ def score_to_grade(score: float) -> str:
 
 
 def apply_grade_caps(raw_grade: str, caps: list[dict]) -> str:
+    """根据已触发的封顶规则修正最终等级。"""
     final_grade = raw_grade
     for cap in caps:
         cap_grade = cap["cap_grade"]
@@ -26,6 +28,7 @@ def apply_grade_caps(raw_grade: str, caps: list[dict]) -> str:
 
 
 def evaluate_grade_caps(daily_totals: dict, daily_targets: dict | None = None) -> list[dict]:
+    """检查能量、限制性成分和数据质量等最高等级封顶规则。"""
     targets = {
         "energy_kcal": 2000.0,
         "sodium_mg_limit": 2000.0,
@@ -58,4 +61,3 @@ def evaluate_grade_caps(daily_totals: dict, daily_targets: dict | None = None) -
     if data_quality.get("status") == "insufficient":
         caps.append({"trigger": "insufficient_nutrition_data", "value": data_quality, "cap_grade": "C"})
     return caps
-

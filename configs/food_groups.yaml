@@ -1,10 +1,31 @@
 food_groups:
   grains_and_tubers:
-    target_g: 250
+    weight: 2
+    target_g: 100
   vegetables:
-    target_g: 300
+    weight: 3
+    target_g: 400
   fruits:
-    target_g: 200
-  quality_protein_foods:
-    target_g: 150
-
+    weight: 3
+    target_g: 275
+  livestock_poultry_meat:
+    weight: 2
+    target_g: 60
+  aquatic_products:
+    weight: 2
+    target_g: 60
+  eggs:
+    weight: 2
+    target_g: 50
+  dairy:
+    weight: 2
+    target_g: 300
+  soy_products:
+    weight: 1
+    target_g: 20
+  nuts:
+    weight: 1
+    target_g: 10
+diversity:
+  weight: 2
+  min_effective_amount_g: 10
