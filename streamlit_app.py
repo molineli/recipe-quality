@@ -173,14 +173,14 @@ def main() -> None:
 
     with input_tab:
         left, right = st.columns([1, 1])
-        run_clicked = left.button("开始计算", type="primary", use_container_width=True)
+        run_clicked = left.button("开始计算", type="primary", width="stretch")
         right.download_button(
             "下载当前输入 JSON",
             data=json.dumps(current_payload, ensure_ascii=False, indent=2),
             file_name="input_day.json",
             mime="application/json",
             key="download_current_input_json",
-            use_container_width=True,
+            width="stretch",
         )
 
     if run_clicked:
@@ -512,7 +512,7 @@ def _editable_tables(st: Any) -> tuple[Any, Any, Any]:
         key="ingredient_editor",
         num_rows="dynamic",
         hide_index=True,
-        use_container_width=True,
+        width="stretch",
         column_config={
             "meal_name": st.column_config.SelectboxColumn(
                 "餐次", options=MEAL_DISPLAY_OPTIONS
@@ -532,7 +532,7 @@ def _editable_tables(st: Any) -> tuple[Any, Any, Any]:
         key="condiment_editor",
         num_rows="dynamic",
         hide_index=True,
-        use_container_width=True,
+        width="stretch",
         column_config={
             "meal_name": st.column_config.SelectboxColumn(
                 "餐次", options=MEAL_DISPLAY_OPTIONS
@@ -549,7 +549,7 @@ def _editable_tables(st: Any) -> tuple[Any, Any, Any]:
         key="extra_editor",
         num_rows="dynamic",
         hide_index=True,
-        use_container_width=True,
+        width="stretch",
         column_config={
             "name": "名称",
             "amount_g": st.column_config.NumberColumn("重量 g", min_value=0.0, step=10.0),
@@ -645,7 +645,7 @@ def _render_detail_analysis(
     _render_nutrition_summary(st, nutrition_totals, (current_payload or {}).get("target_user"))
 
     st.subheader("食材匹配")
-    st.dataframe(_resolved_item_rows(result.get("resolved_items") or []), hide_index=True, use_container_width=True)
+    st.dataframe(_resolved_item_rows(result.get("resolved_items") or []), hide_index=True, width="stretch")
 
     caps = result.get("grade_caps") or []
     st.subheader("等级封顶")
@@ -653,7 +653,7 @@ def _render_detail_analysis(
         for message in _grade_cap_messages(caps):
             _warning_card(st, message)
         with st.expander("封顶规则详情"):
-            st.dataframe(caps, hide_index=True, use_container_width=True)
+            st.dataframe(caps, hide_index=True, width="stretch")
     else:
         st.markdown(
             '<div class="rq-success-card">本次结果未触发等级封顶规则。</div>',
@@ -776,7 +776,7 @@ def _plotly_bar_chart(
         xaxis={"showgrid": True, "gridcolor": "#e5e7eb", "zeroline": False},
         yaxis={"autorange": "reversed", "showgrid": False},
     )
-    st.plotly_chart(figure, use_container_width=True, config={"displayModeBar": False})
+    st.plotly_chart(figure, width="stretch", config={"displayModeBar": False})
 
 
 def _nutrition_rows(daily_totals: dict[str, Any]) -> list[dict[str, Any]]:
@@ -816,7 +816,7 @@ def _render_nutrition_summary(
         _nutrition_progress_bar(st, row)
 
     with st.expander("查看完整营养明细"):
-        st.dataframe(_nutrition_rows(daily_totals), hide_index=True, use_container_width=True)
+        st.dataframe(_nutrition_rows(daily_totals), hide_index=True, width="stretch")
 
 
 def _nutrition_card(st: Any, row: dict[str, Any]) -> None:
