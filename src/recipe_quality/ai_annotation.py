@@ -4,6 +4,7 @@ import json
 import os
 from copy import deepcopy
 from dataclasses import dataclass
+from requests import RequestException
 from typing import Any
 
 from recipe_quality.config_loader import (
@@ -73,6 +74,17 @@ class OpenAIAnnotationConfig:
             timeout_seconds=timeout,
         )
 
+    @classmethod
+    def from_env_with_timeout(cls, timeout_seconds: float) -> "OpenAIAnnotationConfig":
+        """Load annotation settings from env and override request timeout."""
+        config = cls.from_env()
+        return cls(
+            api_key=config.api_key,
+            model=config.model,
+            api_url=config.api_url,
+            timeout_seconds=timeout_seconds,
+        )
+
 
 class OpenAIAnnotationClient:
     def __init__(
@@ -94,15 +106,20 @@ class OpenAIAnnotationClient:
 
     def annotate(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Call Chat Completions and return parsed structured annotation JSON."""
-        response = self.session.post(
-            _normalize_chat_completions_url(self.config.api_url),
-            headers={
-                "Authorization": f"Bearer {self.config.api_key}",
-                "Content-Type": "application/json",
-            },
-            json=self._request_payload(payload),
-            timeout=self.config.timeout_seconds,
-        )
+        try:
+            response = self.session.post(
+                _normalize_chat_completions_url(self.config.api_url),
+                headers={
+                    "Authorization": f"Bearer {self.config.api_key}",
+                    "Content-Type": "application/json",
+                },
+                json=self._request_payload(payload),
+                timeout=self.config.timeout_seconds,
+            )
+        except RequestException as exc:
+            raise AIAnnotationError(
+                f"Qwen annotation request failed before response: {exc}"
+            ) from exc
         self._raise_for_response(response)
         return _extract_structured_output(response.json())
 

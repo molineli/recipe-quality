@@ -1,0 +1,147 @@
+{
+  "ai_warnings": [],
+  "resolved_items": [
+    {
+      "name": "牛奶",
+      "search_name": "milk",
+      "food_group": "dairy",
+      "processing_level": "minimally_processed",
+      "fatsecret_food_name": "Milk",
+      "serving_used": "100 g",
+      "status": "resolved",
+      "error": null
+    },
+    {
+      "name": "鸡蛋",
+      "search_name": "egg",
+      "food_group": "eggs",
+      "processing_level": "unprocessed",
+      "fatsecret_food_name": "Egg",
+      "serving_used": "100 g",
+      "status": "resolved",
+      "error": null
+    },
+    {
+      "name": "番茄",
+      "search_name": "tomato",
+      "food_group": "vegetables",
+      "processing_level": "unprocessed",
+      "fatsecret_food_name": "Cherry Tomatoes",
+      "serving_used": "100 g",
+      "status": "resolved",
+      "error": null
+    },
+    {
+      "name": "鸡蛋",
+      "search_name": "egg",
+      "food_group": "eggs",
+      "processing_level": "unprocessed",
+      "fatsecret_food_name": "Egg",
+      "serving_used": "100 g",
+      "status": "resolved",
+      "error": null
+    },
+    {
+      "name": "米饭",
+      "search_name": "cooked white rice",
+      "food_group": "grains_and_tubers",
+      "processing_level": "minimally_processed",
+      "fatsecret_food_name": "Jasmine Rice (Cooked)",
+      "serving_used": "100 g",
+      "status": "resolved",
+      "error": null
+    },
+    {
+      "name": "鲈鱼",
+      "search_name": "sea bass",
+      "food_group": "aquatic_products",
+      "processing_level": "unprocessed",
+      "fatsecret_food_name": "Sea Bass",
+      "serving_used": "100 g",
+      "status": "resolved",
+      "error": null
+    },
+    {
+      "name": "西兰花",
+      "search_name": "broccoli",
+      "food_group": "vegetables",
+      "processing_level": "unprocessed",
+      "fatsecret_food_name": "Broccoli",
+      "serving_used": "100 g",
+      "status": "resolved",
+      "error": null
+    },
+    {
+      "name": "杂粮饭",
+      "search_name": "cooked brown rice",
+      "food_group": "grains_and_tubers",
+      "processing_level": "minimally_processed",
+      "fatsecret_food_name": "Brown Rice",
+      "serving_used": "100 g",
+      "status": "resolved",
+      "error": null
+    },
+    {
+      "name": "苹果",
+      "search_name": "apple",
+      "food_group": "fruits",
+      "processing_level": "unprocessed",
+      "fatsecret_food_name": "Apples",
+      "serving_used": "100 g",
+      "status": "resolved",
+      "error": null
+    }
+  ],
+  "daily_totals": {
+    "energy_kcal": 1303.1,
+    "protein_g": 80.43100000000001,
+    "fat_g": 36.687999999999995,
+    "saturated_fat_g": 11.0951,
+    "carbohydrate_g": 164.92700000000002,
+    "fiber_g": 16.16,
+    "sodium_mg": 3281.0,
+    "cooking_oil_g": 18.0,
+    "added_sugar_g": 0.0,
+    "food_group_amounts_g": {
+      "dairy": 250.0,
+      "eggs": 150.0,
+      "vegetables": 400.0,
+      "grains_and_tubers": 380.0,
+      "aquatic_products": 150.0,
+      "fruits": 180.0
+    },
+    "food_group_count": 6,
+    "data_quality": {
+      "unresolved_items": [],
+      "unresolved_nutrition_items": [],
+      "unclassified_ingredients": [],
+      "missing_nutrients": [
+        "added_sugar_g"
+      ],
+      "record_quality": {
+        "has_ingredient_weights": true,
+        "has_condiments": true,
+        "has_snacks_and_drinks": true,
+        "completeness": "complete"
+      },
+      "status": "complete"
+    }
+  },
+  "total_score": 75.07,
+  "raw_grade": "C",
+  "final_grade": "C",
+  "module_scores": {
+    "basic_nutrition_quality": 30.26,
+    "limiting_components": 19.24,
+    "cooking_processing_safety": 12.99,
+    "daily_intake_fit": 4.58,
+    "personalization_feasibility": 8.0
+  },
+  "grade_caps": [
+    {
+      "trigger": "energy_ratio_outside_range",
+      "value": 0.728868355110077,
+      "cap_grade": "C"
+    }
+  ]
+}
