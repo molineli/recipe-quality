@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import html
 import json
 import sys
 from pathlib import Path
@@ -140,10 +141,10 @@ def main() -> None:
     import streamlit as st
 
     st.set_page_config(page_title="Recipe Quality Demo", layout="wide")
+    _inject_dashboard_css(st)
     _init_state(st)
 
-    st.title("Recipe Quality 演示工具")
-    st.caption("AI 标注 + FatSecret 营养查询 + 本地规则评分")
+    _render_header(st)
 
     with st.sidebar:
         st.header("目标用户")
@@ -155,7 +156,9 @@ def main() -> None:
 
     should_show_existing_result = bool(st.session_state.get("pipeline_result"))
 
-    input_tab, preview_tab = st.tabs(["表格输入", "JSON 预览"])
+    input_tab, overview_tab, detail_tab, raw_tab = st.tabs(
+        ["输入配置", "评分总览", "详细分析", "原始数据"]
+    )
     with input_tab:
         ingredient_rows, condiment_rows, extra_rows = _editable_tables(st)
 
@@ -167,27 +170,29 @@ def main() -> None:
         date=date,
     )
 
-    with preview_tab:
-        st.caption("这里展示的是系统内部 JSON，餐次和活动水平会保留英文代码，便于规则计算。")
-        st.json(current_payload)
-
-    left, right = st.columns([1, 1])
-    run_clicked = left.button("开始计算", type="primary", use_container_width=True)
-    right.download_button(
-        "下载当前输入 JSON",
-        data=json.dumps(current_payload, ensure_ascii=False, indent=2),
-        file_name="input_day.json",
-        mime="application/json",
-        key="download_current_input_json",
-        use_container_width=True,
-    )
+    with input_tab:
+        left, right = st.columns([1, 1])
+        run_clicked = left.button("开始计算", type="primary", use_container_width=True)
+        right.download_button(
+            "下载当前输入 JSON",
+            data=json.dumps(current_payload, ensure_ascii=False, indent=2),
+            file_name="input_day.json",
+            mime="application/json",
+            key="download_current_input_json",
+            use_container_width=True,
+        )
 
     if run_clicked:
         _run_pipeline(st, current_payload)
         should_show_existing_result = True
 
-    if should_show_existing_result and st.session_state.get("pipeline_result"):
-        _render_result(st, st.session_state["pipeline_result"])
+    result = st.session_state.get("pipeline_result") if should_show_existing_result else None
+    with overview_tab:
+        _render_score_overview(st, result)
+    with detail_tab:
+        _render_detail_analysis(st, result)
+    with raw_tab:
+        _render_raw_data(st, current_payload, result)
 
 
 def _init_state(st: Any) -> None:
@@ -227,6 +232,149 @@ def _reset_state(st: Any) -> None:
 
 def _load_example_payload() -> dict[str, Any]:
     return json.loads(EXAMPLE_PATH.read_text(encoding="utf-8"))
+
+
+def _inject_dashboard_css(st: Any) -> None:
+    st.markdown(
+        """
+        <style>
+        .stApp {
+            background: linear-gradient(180deg, #f6f8fb 0%, #eef3f8 100%);
+        }
+        .block-container {
+            padding-top: 2rem;
+            padding-bottom: 3rem;
+            max-width: 1280px;
+        }
+        .rq-hero {
+            background: #ffffff;
+            border: 1px solid #e4e9f1;
+            border-radius: 18px;
+            padding: 24px 28px;
+            box-shadow: 0 16px 40px rgba(31, 41, 55, 0.08);
+            margin-bottom: 18px;
+        }
+        .rq-hero-eyebrow {
+            color: #2563eb;
+            font-size: 0.86rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            margin-bottom: 6px;
+        }
+        .rq-hero-title {
+            color: #111827;
+            font-size: 2.1rem;
+            font-weight: 800;
+            line-height: 1.15;
+            margin: 0;
+        }
+        .rq-hero-subtitle {
+            color: #64748b;
+            font-size: 1rem;
+            margin-top: 8px;
+        }
+        .rq-card {
+            background: #ffffff;
+            border: 1px solid #e4e9f1;
+            border-radius: 16px;
+            padding: 18px 20px;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+            min-height: 126px;
+        }
+        .rq-card-label {
+            color: #64748b;
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .rq-card-value {
+            color: #0f172a;
+            font-size: 2.2rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+        .rq-card-factor {
+            color: #0f172a;
+            font-size: 1.2rem;
+            font-weight: 800;
+            line-height: 1.35;
+        }
+        .rq-card-detail {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        .rq-score-card {
+            border-top: 5px solid #2563eb;
+        }
+        .rq-grade-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 56px;
+            height: 56px;
+            padding: 0 18px;
+            border-radius: 999px;
+            color: #ffffff;
+            font-size: 1.8rem;
+            font-weight: 900;
+            box-shadow: inset 0 -2px 0 rgba(0,0,0,0.12);
+        }
+        .rq-grade-a { background: #16a34a; }
+        .rq-grade-b { background: #0891b2; }
+        .rq-grade-c { background: #f59e0b; }
+        .rq-grade-d { background: #ea580c; }
+        .rq-grade-e { background: #dc2626; }
+        .rq-warning-card {
+            background: #fff7d6;
+            border: 1px solid #f8d85e;
+            border-left: 6px solid #f59e0b;
+            border-radius: 16px;
+            padding: 16px 18px;
+            color: #713f12;
+            font-weight: 650;
+            margin: 14px 0 18px 0;
+            box-shadow: 0 10px 28px rgba(245, 158, 11, 0.12);
+        }
+        .rq-success-card {
+            background: #eafaf0;
+            border: 1px solid #bbf7d0;
+            border-left: 6px solid #16a34a;
+            border-radius: 16px;
+            padding: 16px 18px;
+            color: #14532d;
+            font-weight: 650;
+            margin: 14px 0 18px 0;
+        }
+        .rq-muted {
+            color: #64748b;
+            font-size: 0.92rem;
+        }
+        .rq-empty-state {
+            background: #ffffff;
+            border: 1px dashed #cbd5e1;
+            border-radius: 16px;
+            padding: 32px;
+            color: #64748b;
+            text-align: center;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_header(st: Any) -> None:
+    st.markdown(
+        """
+        <div class="rq-hero">
+            <div class="rq-hero-eyebrow">RECIPE QUALITY DASHBOARD</div>
+            <h1 class="rq-hero-title">食谱质量评分演示工具</h1>
+            <div class="rq-hero-subtitle">AI 标注、FatSecret 营养查询与本地规则评分的一体化演示面板</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def _target_user_controls(st: Any, target_user: dict[str, Any]) -> dict[str, Any]:
@@ -359,13 +507,46 @@ def _run_pipeline(st: Any, payload: dict[str, Any]) -> None:
 
 
 def _render_result(st: Any, result: dict[str, Any]) -> None:
-    st.divider()
-    st.header("评分结果")
-    score_col, final_col, raw_col = st.columns(3)
-    score_col.metric("总分", _format_number(result.get("total_score")))
-    final_col.metric("最终等级", result.get("final_grade", "-"))
-    raw_col.metric("原始等级", result.get("raw_grade", "-"))
+    _render_score_overview(st, result)
+    _render_detail_analysis(st, result)
 
+
+def _render_score_overview(st: Any, result: dict[str, Any] | None) -> None:
+    st.subheader("评分总览")
+    if not result:
+        _render_empty_state(st, "请先在“输入配置”中点击开始计算，完成后这里会展示综合评分和等级信息。")
+        return
+
+    caps = result.get("grade_caps") or []
+    score_col, final_col, raw_col, factor_col = st.columns([1.1, 1, 1, 1.5])
+    final_grade = str(result.get("final_grade") or "-")
+    raw_grade = str(result.get("raw_grade") or "-")
+    primary_factor = _primary_limiting_factor(caps)
+
+    with score_col:
+        _metric_card(st, "综合评分", _format_number(result.get("total_score")), "100 分制综合饮食质量评分", "rq-score-card")
+    with final_col:
+        _grade_card(st, "最终等级", final_grade, "应用封顶规则后的等级")
+    with raw_col:
+        _grade_card(st, "原始等级", raw_grade, "仅按总分换算的等级")
+    with factor_col:
+        _factor_card(st, primary_factor, "优先显示最影响最终等级的因素")
+
+    if caps:
+        for message in _grade_cap_messages(caps):
+            _warning_card(st, message)
+    else:
+        st.markdown(
+            '<div class="rq-success-card">本次结果未触发等级封顶规则。</div>',
+            unsafe_allow_html=True,
+        )
+
+
+def _render_detail_analysis(st: Any, result: dict[str, Any] | None) -> None:
+    st.subheader("详细分析")
+    if not result:
+        _render_empty_state(st, "完成计算后，这里会显示模块得分、食物组分布、营养汇总和食材匹配。")
+        return
     module_scores = result.get("module_scores") or {}
     nutrition_totals = result.get("daily_totals") or {}
     food_groups = nutrition_totals.get("food_group_amounts_g") or {}
@@ -374,11 +555,11 @@ def _render_result(st: Any, result: dict[str, Any]) -> None:
     with chart_col:
         st.subheader("模块分")
         module_rows = _module_score_rows(module_scores)
-        st.bar_chart(module_rows, x="模块", y="得分")
+        _plotly_bar_chart(st, module_rows, label_key="模块", value_key="得分", color="#2563eb")
     with food_col:
         st.subheader("食物组重量")
         food_group_rows = _food_group_rows(food_groups)
-        st.bar_chart(food_group_rows, x="食物组", y="重量 g")
+        _plotly_bar_chart(st, food_group_rows, label_key="食物组", value_key="重量 g", color="#16a34a")
 
     st.subheader("全天营养汇总")
     st.dataframe(_nutrition_rows(nutrition_totals), hide_index=True, use_container_width=True)
@@ -390,11 +571,14 @@ def _render_result(st: Any, result: dict[str, Any]) -> None:
     st.subheader("等级封顶")
     if caps:
         for message in _grade_cap_messages(caps):
-            st.warning(message)
+            _warning_card(st, message)
         with st.expander("封顶规则详情"):
             st.dataframe(caps, hide_index=True, use_container_width=True)
     else:
-        st.success("本次结果未触发等级封顶规则。")
+        st.markdown(
+            '<div class="rq-success-card">本次结果未触发等级封顶规则。</div>',
+            unsafe_allow_html=True,
+        )
 
     warnings = result.get("ai_warnings") or []
     with st.expander("AI 标注提示"):
@@ -404,15 +588,115 @@ def _render_result(st: Any, result: dict[str, Any]) -> None:
         else:
             st.write("无 AI 标注提示。")
 
-    with st.expander("完整结果 JSON"):
-        st.json(result)
-        st.download_button(
-            "下载结果 JSON",
-            data=json.dumps(result, ensure_ascii=False, indent=2),
-            file_name="full_result.json",
-            mime="application/json",
-            key="download_full_result_json",
-        )
+
+def _render_raw_data(st: Any, current_payload: dict[str, Any], result: dict[str, Any] | None) -> None:
+    st.subheader("原始数据")
+    st.caption("这里展示的是系统内部 JSON，餐次和活动水平会保留英文代码，便于规则计算。")
+    st.json(current_payload)
+    if result:
+        with st.expander("完整结果 JSON"):
+            st.json(result)
+            st.download_button(
+                "下载结果 JSON",
+                data=json.dumps(result, ensure_ascii=False, indent=2),
+                file_name="full_result.json",
+                mime="application/json",
+                key="download_full_result_json",
+            )
+
+
+def _metric_card(st: Any, label: str, value: str, detail: str, extra_class: str = "") -> None:
+    st.markdown(
+        f"""
+        <div class="rq-card {extra_class}">
+            <div class="rq-card-label">{_html_escape(label)}</div>
+            <div class="rq-card-value">{_html_escape(value)}</div>
+            <div class="rq-card-detail">{_html_escape(detail)}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _grade_card(st: Any, label: str, grade: str, detail: str) -> None:
+    st.markdown(
+        f"""
+        <div class="rq-card">
+            <div class="rq-card-label">{_html_escape(label)}</div>
+            <span class="rq-grade-badge {_grade_badge_class(grade)}">{_html_escape(grade)}</span>
+            <div class="rq-card-detail">{_html_escape(detail)}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _factor_card(st: Any, value: str, detail: str) -> None:
+    st.markdown(
+        f"""
+        <div class="rq-card">
+            <div class="rq-card-label">主要限制因素</div>
+            <div class="rq-card-factor">{_html_escape(value)}</div>
+            <div class="rq-card-detail">{_html_escape(detail)}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _warning_card(st: Any, message: str) -> None:
+    st.markdown(
+        f'<div class="rq-warning-card">{_html_escape(message)}</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def _render_empty_state(st: Any, message: str) -> None:
+    st.markdown(
+        f'<div class="rq-empty-state">{_html_escape(message)}</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def _plotly_bar_chart(
+    st: Any,
+    rows: list[dict[str, Any]],
+    *,
+    label_key: str,
+    value_key: str,
+    color: str,
+) -> None:
+    if not rows:
+        _render_empty_state(st, "暂无可展示的数据。")
+        return
+    try:
+        import plotly.graph_objects as go
+    except ModuleNotFoundError:
+        st.error("缺少 Plotly 依赖，请运行：python -m pip install -e \".[demo]\"")
+        return
+    figure = go.Figure(
+        data=[
+            go.Bar(
+                x=[row[value_key] for row in rows],
+                y=[row[label_key] for row in rows],
+                orientation="h",
+                marker={"color": color, "line": {"color": "rgba(15,23,42,0.12)", "width": 1}},
+                text=[row[value_key] for row in rows],
+                textposition="auto",
+                hovertemplate="%{y}<br>%{x}<extra></extra>",
+            )
+        ]
+    )
+    figure.update_layout(
+        height=330,
+        margin={"l": 16, "r": 16, "t": 18, "b": 24},
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font={"family": "Microsoft YaHei, Arial, sans-serif", "color": "#334155"},
+        xaxis={"showgrid": True, "gridcolor": "#e5e7eb", "zeroline": False},
+        yaxis={"autorange": "reversed", "showgrid": False},
+    )
+    st.plotly_chart(figure, use_container_width=True, config={"displayModeBar": False})
 
 
 def _nutrition_rows(daily_totals: dict[str, Any]) -> list[dict[str, Any]]:
@@ -535,6 +819,13 @@ def _grade_cap_messages(caps: list[dict[str, Any]]) -> list[str]:
     return [_grade_cap_message(cap) for cap in caps]
 
 
+def _primary_limiting_factor(caps: list[dict[str, Any]]) -> str:
+    if not caps:
+        return "未触发等级封顶"
+    trigger = str(caps[0].get("trigger") or "")
+    return GRADE_CAP_LABELS.get(trigger, trigger or "未知限制因素")
+
+
 def _grade_cap_message(cap: dict[str, Any]) -> str:
     trigger = str(cap.get("trigger") or "")
     cap_grade = cap.get("cap_grade") or "-"
@@ -572,6 +863,13 @@ def _grade_cap_message(cap: dict[str, Any]) -> str:
 def _label_module_key(key: Any) -> str:
     text = str(key or "")
     return MODULE_LABELS.get(text, text)
+
+
+def _grade_badge_class(grade: Any) -> str:
+    text = str(grade or "").strip().lower()
+    if text in {"a", "b", "c", "d", "e"}:
+        return f"rq-grade-{text}"
+    return "rq-grade-c"
 
 
 def _label_sex(value: Any) -> str:
@@ -623,6 +921,10 @@ def _list_text(value: Any) -> str:
     if isinstance(value, list):
         return ", ".join(str(item) for item in value)
     return str(value or "")
+
+
+def _html_escape(value: Any) -> str:
+    return html.escape(str(value or ""))
 
 
 def _as_records(table: Any) -> list[dict[str, Any]]:

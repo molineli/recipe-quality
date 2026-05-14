@@ -1,8 +1,12 @@
+import re
+from pathlib import Path
+
 from streamlit_app import (
     _display_condiment_rows,
     _display_extra_item_rows,
     _display_ingredient_rows,
     _food_group_rows,
+    _grade_badge_class,
     _grade_cap_messages,
     _internalize_condiment_rows,
     _internalize_extra_item_rows,
@@ -15,6 +19,7 @@ from streamlit_app import (
     _label_sex,
     _label_status,
     _module_score_rows,
+    _primary_limiting_factor,
 )
 
 
@@ -66,11 +71,17 @@ def test_grade_cap_message_explains_energy_ratio_in_plain_chinese():
     assert messages == [
         "本次最终等级被限制为 C，原因是全天能量摄入约为目标的 73%，全天能量摄入明显偏离推荐范围。"
     ]
+    assert _primary_limiting_factor(
+        [{"trigger": "energy_ratio_outside_range", "value": 0.72, "cap_grade": "C"}]
+    ) == "全天能量摄入明显偏离推荐范围"
+    assert _primary_limiting_factor([]) == "未触发等级封顶"
 
 
 def test_status_label_falls_back_to_raw_value():
     assert _label_status("resolved") == "已解析"
     assert _label_status("custom_status") == "custom_status"
+    assert _grade_badge_class("A") == "rq-grade-a"
+    assert _grade_badge_class("unknown") == "rq-grade-c"
 
 
 def test_basic_user_facing_labels_are_chinese_with_fallbacks():
@@ -113,3 +124,13 @@ def test_demo_table_rows_display_chinese_and_convert_back_to_internal_values():
     assert _internalize_condiment_rows(condiment_rows)[0]["meal_name"] == "lunch"
     assert _internalize_extra_item_rows(extra_rows)[0]["meal_name"] == "snack"
     assert _internalize_extra_item_rows(extra_rows)[0]["item_type"] == "fruit"
+
+
+def test_download_buttons_have_unique_stable_keys_and_plotly_replaces_bar_chart():
+    source = Path("streamlit_app.py").read_text(encoding="utf-8")
+    keys = re.findall(r"download_button\([\s\S]*?key=\"([^\"]+)\"", source)
+
+    assert keys == ["download_current_input_json", "download_full_result_json"]
+    assert len(keys) == len(set(keys))
+    assert "st.bar_chart" not in source
+    assert "st.plotly_chart" in source
