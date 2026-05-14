@@ -9,6 +9,7 @@ from recipe_quality.ai_annotation import (
     annotate_recipe_input,
     merge_annotation,
 )
+from recipe_quality.engine import evaluate_daily_diet
 
 
 class FakeResponse:
@@ -36,14 +37,12 @@ class FakeSession:
         }
         return FakeResponse(
             {
-                "output": [
+                "choices": [
                     {
-                        "content": [
-                            {
-                                "type": "output_text",
-                                "text": json_module_dumps(self.annotation),
-                            }
-                        ]
+                        "message": {
+                            "role": "assistant",
+                            "content": json_module_dumps(self.annotation),
+                        }
                     }
                 ]
             }
@@ -137,9 +136,12 @@ def test_openai_annotation_client_sends_schema_and_merges_annotations():
 
     annotated = annotate_recipe_input(sample_payload(), client=client)
 
-    schema = session.last_request["json"]["text"]["format"]["schema"]
-    assert "stir_fry_low_oil" in schema["properties"]["dish_annotations"]["items"]["properties"]["cooking_method"]["enum"]
-    assert "unprocessed" in schema["properties"]["ingredient_annotations"]["items"]["properties"]["processing_level"]["enum"]
+    request_payload = session.last_request["json"]
+    system_prompt = request_payload["messages"][0]["content"]
+    assert session.last_request["url"].endswith("/chat/completions")
+    assert request_payload["response_format"] == {"type": "json_object"}
+    assert "stir_fry_low_oil" in system_prompt
+    assert "unprocessed" in system_prompt
     dish = annotated["meals"][0]["dishes"][0]
     assert dish["cooking_method"] == "stir_fry_low_oil"
     assert dish["cooking_method_source"] == "ai"
@@ -171,6 +173,51 @@ def test_merge_annotation_falls_back_for_invalid_labels_and_ignores_scores():
     assert any("Invalid cooking_method" in warning for warning in warnings)
     assert any("Invalid processing_level" in warning for warning in warnings)
     assert any("Ignored direct AI score field: e_score" in warning for warning in warnings)
+
+
+def test_annotated_payload_is_consumed_by_c_and_e_scoring():
+    payload = {
+        "target_user": {
+            "liked_foods": ["tomato"],
+            "habit_pattern": "chinese_home_meals",
+        },
+        "meals": [
+            {
+                "meal_name": "lunch",
+                "dishes": [
+                    {
+                        "dish_name": "tomato eggs",
+                        "ingredients": [
+                            {
+                                "name": "red vegetable",
+                                "amount_g": 200,
+                                "food_group": "vegetables",
+                                "nutrients": {"energy_kcal": 36, "fiber_g": 2},
+                            },
+                            {
+                                "name": "egg",
+                                "amount_g": 100,
+                                "food_group": "eggs",
+                                "nutrients": {"energy_kcal": 140, "protein_g": 13},
+                            },
+                        ],
+                    }
+                ],
+            }
+        ],
+    }
+    annotation = sample_annotation()
+
+    annotated = merge_annotation(payload, annotation, model="test-model")
+    result = evaluate_daily_diet(annotated)
+
+    c_details = result["module_details"]["cooking_processing_safety"]
+    e_details = result["module_details"]["personalization_feasibility"]
+    assert c_details["dish_scores"][0]["method_used"] == "stir_fry_low_oil"
+    assert c_details["ingredient_processing_scores"][0]["level_used"] == "unprocessed"
+    assert e_details["liked_foods_details"]["matched_foods"][0]["match_source"] == "ai_label"
+    assert e_details["habit_match_details"]["source"] == "explicit_label"
+    assert e_details["feasibility_details"]["source"] == "structured_factors"
 
 
 def test_ai_annotate_api_returns_annotated_payload(monkeypatch):

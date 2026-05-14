@@ -11,7 +11,7 @@ from recipe_quality.config_loader import load_cooking_method_scores, load_proces
 
 SCHEMA_VERSION = "recipe_ai_annotation_v1"
 DEFAULT_OPENAI_MODEL = "qwen-plus"
-DEFAULT_OPENAI_API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+DEFAULT_OPENAI_API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
 UNKNOWN_COOKING_METHOD = "unknown_cooking_method"
 UNKNOWN_PROCESSING_LEVEL = "unknown_processing_level"
 LIKED_FOOD_USE_QUALITIES = {"reasonable", "risky", "unknown"}
@@ -40,8 +40,8 @@ class AIAnnotationError(RuntimeError):
 @dataclass(slots=True)
 class OpenAIAnnotationConfig:
     api_key: str
-    model: str
-    api_url: str
+    model: str = DEFAULT_OPENAI_MODEL
+    api_url: str = DEFAULT_OPENAI_API_URL
     timeout_seconds: float = 30.0
 
     @classmethod
@@ -65,7 +65,7 @@ class OpenAIAnnotationConfig:
         return cls(
             api_key=api_key,
             model=model or DEFAULT_OPENAI_MODEL,
-            api_url=api_url or DEFAULT_OPENAI_API_URL,
+            api_url=_normalize_chat_completions_url(api_url or DEFAULT_OPENAI_API_URL),
             timeout_seconds=timeout,
         )
 
@@ -76,22 +76,22 @@ class OpenAIAnnotationClient:
         config: OpenAIAnnotationConfig | None = None,
         session: Any | None = None,
     ):
-        """Create an OpenAI Responses API client for recipe annotation."""
+        """Create an OpenAI-compatible chat client for recipe annotation."""
         self.config = config or OpenAIAnnotationConfig.from_env()
         if session is None:
             try:
                 import requests
             except ModuleNotFoundError as exc:
                 raise AIAnnotationError(
-                    "The 'requests' package is required for OpenAI annotation calls."
+                    "The 'requests' package is required for Qwen annotation calls."
                 ) from exc
             session = requests.Session()
         self.session = session
 
     def annotate(self, payload: dict[str, Any]) -> dict[str, Any]:
-        """Call the Responses API and return parsed structured annotation JSON."""
+        """Call Chat Completions and return parsed structured annotation JSON."""
         response = self.session.post(
-            self.config.api_url,
+            _normalize_chat_completions_url(self.config.api_url),
             headers={
                 "Authorization": f"Bearer {self.config.api_key}",
                 "Content-Type": "application/json",
@@ -103,31 +103,29 @@ class OpenAIAnnotationClient:
         return _extract_structured_output(response.json())
 
     def _request_payload(self, payload: dict[str, Any]) -> dict[str, Any]:
-        """Build the Responses API request with a strict annotation schema."""
+        """Build a qwen-plus/OpenAI-compatible chat completions request."""
         schema = build_annotation_schema(
             cooking_methods=sorted(load_cooking_method_scores()),
             processing_levels=sorted(load_processing_level_scores()),
         )
+        system_prompt = (
+            AI_ANNOTATION_INSTRUCTIONS
+            + "\nReturn a JSON object matching this JSON schema exactly:\n"
+            + json.dumps(schema, ensure_ascii=False)
+        )
         return {
             "model": self.config.model,
-            "input": [
+            "messages": [
                 {
                     "role": "system",
-                    "content": AI_ANNOTATION_INSTRUCTIONS,
+                    "content": system_prompt,
                 },
                 {
                     "role": "user",
                     "content": json.dumps(payload, ensure_ascii=False),
                 },
             ],
-            "text": {
-                "format": {
-                    "type": "json_schema",
-                    "name": SCHEMA_VERSION,
-                    "strict": True,
-                    "schema": schema,
-                }
-            },
+            "response_format": {"type": "json_object"},
         }
 
     @staticmethod
@@ -138,7 +136,7 @@ class OpenAIAnnotationClient:
                 detail = response.json()
             except ValueError:
                 detail = response.text
-            raise AIAnnotationError(f"OpenAI annotation request failed: HTTP {response.status_code} {detail}")
+            raise AIAnnotationError(f"Qwen annotation request failed: HTTP {response.status_code} {detail}")
 
 
 AI_ANNOTATION_INSTRUCTIONS = """Annotate the recipe for deterministic rule scoring.
@@ -221,7 +219,7 @@ def merge_annotation(
     output["feasibility"] = _validated_feasibility(annotation.get("feasibility") or {}, warnings)
     warnings.extend(_string_list(annotation.get("warnings")))
     output["ai_annotation_meta"] = {
-        "provider": "openai",
+        "provider": "Qwen",
         "model": model or annotation.get("model") or DEFAULT_OPENAI_MODEL,
         "schema_version": SCHEMA_VERSION,
         "warnings": warnings,
@@ -233,7 +231,7 @@ def build_annotation_schema(
     cooking_methods: list[str],
     processing_levels: list[str],
 ) -> dict[str, Any]:
-    """Build the strict JSON schema sent to OpenAI structured outputs.
+    """Build the strict JSON schema sent to Qwen structured outputs.
 
     The schema constrains model output to the enum labels that the local rule
     engine already understands. This keeps AI annotation separate from scoring.
@@ -345,6 +343,11 @@ def build_annotation_schema(
 
 def _extract_structured_output(response_payload: dict[str, Any]) -> dict[str, Any]:
     """Extract parsed JSON from common Responses API structured-output shapes."""
+    for choice in response_payload.get("choices") or []:
+        message = choice.get("message") or {}
+        content = message.get("content")
+        if content:
+            return _loads_object(content)
     if isinstance(response_payload.get("output_parsed"), dict):
         return response_payload["output_parsed"]
     if response_payload.get("output_text"):
@@ -361,6 +364,7 @@ def _extract_structured_output(response_payload: dict[str, Any]) -> dict[str, An
 
 def _loads_object(text: str) -> dict[str, Any]:
     """Parse model text as a JSON object and raise a clear annotation error."""
+    text = _strip_json_fence(text)
     try:
         parsed = json.loads(text)
     except json.JSONDecodeError as exc:
@@ -368,6 +372,19 @@ def _loads_object(text: str) -> dict[str, Any]:
     if not isinstance(parsed, dict):
         raise AIAnnotationError("OpenAI annotation output must be a JSON object.")
     return parsed
+
+
+def _strip_json_fence(text: str) -> str:
+    """Remove common markdown code fences from model JSON output."""
+    stripped = text.strip()
+    if stripped.startswith("```"):
+        lines = stripped.splitlines()
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+        stripped = "\n".join(lines).strip()
+    return stripped
 
 
 def _dish_at(payload: dict[str, Any], meal_index: Any, dish_index: Any) -> dict[str, Any] | None:
@@ -418,6 +435,14 @@ def _enum_or_unknown(value: Any, allowed: set[str], field_name: str, warnings: l
         warnings.append(f"Invalid {field_name}={text}; used unknown.")
         return "unknown"
     return text
+
+
+def _normalize_chat_completions_url(api_url: str) -> str:
+    """Accept either a base compatible-mode URL or the full chat completions URL."""
+    url = api_url.rstrip("/")
+    if url.endswith("/chat/completions"):
+        return url
+    return f"{url}/chat/completions"
 
 
 def _direct_score_warnings(value: Any, path: str = "") -> list[str]:
