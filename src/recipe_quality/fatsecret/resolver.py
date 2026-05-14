@@ -3,7 +3,12 @@ from __future__ import annotations
 from typing import Any
 
 from recipe_quality.fatsecret.client import FatSecretClient, FatSecretError
-from recipe_quality.fatsecret.mapper import scale_serving_to_amount, serving_label, serving_metric_amount
+from recipe_quality.fatsecret.mapper import (
+    is_100g_or_100ml_serving,
+    scale_serving_to_amount,
+    serving_label,
+    serving_metric_amount,
+)
 from recipe_quality.fatsecret.schemas import extract_food, extract_foods, extract_servings
 from recipe_quality.models import ResolvedFoodItem
 
@@ -141,7 +146,7 @@ def choose_serving(servings: list[dict[str, Any]]) -> dict[str, Any] | None:
         """计算 serving 的排序键，优先 100g/100ml。"""
         amount = serving_metric_amount(serving)
         label = serving_label(serving).lower()
-        if amount == 100:
+        if is_100g_or_100ml_serving(serving):
             return (0, label)
         if amount:
             return (1, label)

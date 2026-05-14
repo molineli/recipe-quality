@@ -14,6 +14,11 @@ def as_list(value: Any) -> list[Any]:
 
 def extract_foods(search_payload: dict[str, Any]) -> list[dict[str, Any]]:
     """从 foods.search 响应中提取食物候选列表。"""
+    foods_search = search_payload.get("foods_search") or {}
+    results = foods_search.get("results") or {}
+    if results:
+        return as_list(results.get("food"))
+
     foods = search_payload.get("foods") or {}
     return as_list(foods.get("food"))
 

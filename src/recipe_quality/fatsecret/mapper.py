@@ -50,6 +50,18 @@ def serving_metric_amount(serving: dict[str, Any]) -> float | None:
     return None
 
 
+def is_100g_or_100ml_serving(serving: dict[str, Any]) -> bool:
+    """Return whether the serving is an explicit 100 g or 100 ml standard."""
+    amount = serving_metric_amount(serving)
+    if amount != 100:
+        return False
+    metric_unit = str(serving.get("metric_serving_unit") or "").lower()
+    if metric_unit in {"g", "gram", "grams", "ml", "milliliter", "milliliters"}:
+        return True
+    serving_description = str(serving.get("serving_description") or "").strip().lower()
+    return serving_description in {"100 g", "100g", "100 ml", "100ml"}
+
+
 def serving_label(serving: dict[str, Any]) -> str:
     """生成便于展示的 serving 描述文本。"""
     description = serving.get("serving_description")

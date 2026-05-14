@@ -74,3 +74,19 @@ def test_resolver_uses_search_name_for_fatsecret_query_and_keeps_original_name()
 def test_choose_serving_returns_none_when_no_metric_serving():
     """验证没有可按克数换算的 serving 时返回 None。"""
     assert choose_serving([{"serving_description": "1 serving", "calories": "100"}]) is None
+
+
+def test_choose_serving_falls_back_to_metric_serving_when_100g_is_missing():
+    serving = choose_serving(
+        [
+            {"serving_description": "1 serving", "calories": "100"},
+            {
+                "serving_description": "1 cup",
+                "metric_serving_amount": "158",
+                "metric_serving_unit": "g",
+                "calories": "205",
+            },
+        ]
+    )
+
+    assert serving["serving_description"] == "1 cup"
