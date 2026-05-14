@@ -7,6 +7,18 @@ LIMITED_COMPONENTS = (
     ("cooking_oil_g", "cooking_oil_g_limit", "cooking_oil"),
     ("added_sugar_g", "added_sugar_g_limit", "added_sugar"),
 )
+MAIN_MEAL_ALIASES = {
+    "breakfast": "breakfast",
+    "早餐": "breakfast",
+    "早饭": "breakfast",
+    "lunch": "lunch",
+    "午餐": "lunch",
+    "午饭": "lunch",
+    "dinner": "dinner",
+    "晚餐": "dinner",
+    "晚饭": "dinner",
+}
+SNACK_MEAL_NAMES = {"snack", "snacks", "零食", "加餐", "点心"}
 
 
 def score_to_grade(score: float) -> str:
@@ -105,7 +117,151 @@ def evaluate_grade_caps(daily_totals: dict, resolved_targets: dict | None = None
             }
         )
 
+    ingredient_records = daily_totals.get("ingredient_records") or []
+    edible_weight_g = _edible_weight_g(ingredient_records)
+    if edible_weight_g is not None:
+        if edible_weight_g < 600 or edible_weight_g > 3500:
+            caps.append(
+                {
+                    "trigger": "edible_weight_outside_range",
+                    "value": edible_weight_g,
+                    "cap_grade": "D",
+                }
+            )
+        if edible_weight_g > 0 and energy:
+            energy_density = energy / edible_weight_g
+            if energy_density < 0.3 or energy_density > 3.5:
+                caps.append(
+                    {
+                        "trigger": "energy_density_outside_range",
+                        "value": energy_density,
+                        "cap_grade": "D",
+                    }
+                )
+
+    meal_energy = _meal_energy_by_name(ingredient_records)
+    if energy and meal_energy:
+        max_meal_ratio = max(meal_energy.values()) / energy
+        if max_meal_ratio > 0.80:
+            caps.append(
+                {
+                    "trigger": "max_meal_energy_ratio_above_80_percent",
+                    "value": max_meal_ratio,
+                    "cap_grade": "E",
+                }
+            )
+        elif max_meal_ratio > 0.70:
+            caps.append(
+                {
+                    "trigger": "max_meal_energy_ratio_above_70_percent",
+                    "value": max_meal_ratio,
+                    "cap_grade": "D",
+                }
+            )
+
+        snack_energy = meal_energy.get("snack", 0.0)
+        snack_ratio = snack_energy / energy
+        if snack_ratio > 0.50:
+            caps.append(
+                {
+                    "trigger": "snack_energy_ratio_above_50_percent",
+                    "value": snack_ratio,
+                    "cap_grade": "D",
+                }
+            )
+
+        main_meal_names = {"breakfast", "lunch", "dinner"}
+        if main_meal_names.issubset(meal_energy):
+            main_meal_ratios = {meal: meal_energy[meal] / energy for meal in main_meal_names}
+            abnormal_main_meals = [
+                meal
+                for meal, ratio in main_meal_ratios.items()
+                if (
+                    (meal == "breakfast" and (ratio < 0.10 or ratio > 0.50))
+                    or (meal == "lunch" and (ratio < 0.15 or ratio > 0.60))
+                    or (meal == "dinner" and (ratio < 0.15 or ratio > 0.55))
+                )
+            ]
+            if abnormal_main_meals:
+                caps.append(
+                    {
+                        "trigger": "main_meal_energy_ratio_abnormal",
+                        "value": main_meal_ratios,
+                        "cap_grade": "C",
+                    }
+                )
+
+            sorted_main_ratios = sorted(main_meal_ratios.values())
+            if sorted_main_ratios[0] < 0.05 and sorted_main_ratios[1] + sorted_main_ratios[2] > 0.90:
+                caps.append(
+                    {
+                        "trigger": "two_main_meals_energy_ratio_above_90_percent",
+                        "value": main_meal_ratios,
+                        "cap_grade": "D",
+                    }
+                )
+
     data_quality = daily_totals.get("data_quality") or {}
     if data_quality.get("status") == "insufficient":
         caps.append({"trigger": "insufficient_nutrition_data", "value": data_quality, "cap_grade": "C"})
     return caps
+
+
+def _edible_weight_g(ingredient_records: list[dict]) -> float | None:
+    if not ingredient_records:
+        return None
+    weight = 0.0
+    has_amount = False
+    for item in ingredient_records:
+        if not item.get("edible", True):
+            continue
+        amount = _to_float(item.get("amount_g"))
+        if amount is None:
+            continue
+        weight += amount
+        has_amount = True
+    return round(weight, 2) if has_amount else None
+
+
+def _meal_energy_by_name(ingredient_records: list[dict]) -> dict[str, float]:
+    meal_energy: dict[str, float] = {}
+    for item in ingredient_records:
+        if not item.get("edible", True):
+            continue
+        meal_name = _canonical_meal_name(item.get("meal_name"))
+        if meal_name is None:
+            continue
+        energy = _record_energy(item)
+        if energy is None:
+            continue
+        meal_energy[meal_name] = meal_energy.get(meal_name, 0.0) + energy
+    return meal_energy
+
+
+def _canonical_meal_name(value: object) -> str | None:
+    text = str(value or "").strip().lower()
+    if not text:
+        return None
+    if text in MAIN_MEAL_ALIASES:
+        return MAIN_MEAL_ALIASES[text]
+    if text in SNACK_MEAL_NAMES:
+        return "snack"
+    return None
+
+
+def _record_energy(record: dict) -> float | None:
+    nutrients = record.get("nutrients") or {}
+    if isinstance(nutrients, dict):
+        energy = _to_float(nutrients.get("energy_kcal"))
+        if energy is not None:
+            return energy
+    return _to_float(record.get("energy_kcal"))
+
+
+def _to_float(value: object) -> float | None:
+    if value in (None, ""):
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
