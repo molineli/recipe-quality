@@ -21,6 +21,7 @@ from recipe_quality.demo_input import (
     target_user_from_payload,
 )
 from recipe_quality.pipeline import evaluate_full_pipeline
+from recipe_quality.targets import resolve_basic_nutrition_targets, resolve_daily_targets
 
 
 EXAMPLE_PATH = REPO_ROOT / "examples" / "input_day.json"
@@ -190,7 +191,7 @@ def main() -> None:
     with overview_tab:
         _render_score_overview(st, result)
     with detail_tab:
-        _render_detail_analysis(st, result)
+        _render_detail_analysis(st, result, current_payload)
     with raw_tab:
         _render_raw_data(st, current_payload, result)
 
@@ -358,6 +359,82 @@ def _inject_dashboard_css(st: Any) -> None:
             color: #64748b;
             text-align: center;
         }
+        .rq-nutrition-card {
+            background: #ffffff;
+            border: 1px solid #e4e9f1;
+            border-radius: 16px;
+            padding: 16px 18px;
+            box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+            min-height: 150px;
+        }
+        .rq-nutrition-label {
+            color: #64748b;
+            font-size: 0.86rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .rq-nutrition-value {
+            color: #0f172a;
+            font-size: 1.75rem;
+            font-weight: 850;
+            line-height: 1.1;
+            margin-bottom: 10px;
+        }
+        .rq-status {
+            display: inline-flex;
+            border-radius: 999px;
+            padding: 3px 10px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+        .rq-status-good { background: #dcfce7; color: #166534; }
+        .rq-status-low { background: #dbeafe; color: #1d4ed8; }
+        .rq-status-high { background: #ffedd5; color: #c2410c; }
+        .rq-status-risk { background: #fee2e2; color: #b91c1c; }
+        .rq-nutrition-note {
+            color: #64748b;
+            font-size: 0.86rem;
+            line-height: 1.45;
+        }
+        .rq-progress-card {
+            background: #ffffff;
+            border: 1px solid #e4e9f1;
+            border-radius: 14px;
+            padding: 13px 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.045);
+        }
+        .rq-progress-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: baseline;
+            margin-bottom: 8px;
+        }
+        .rq-progress-name {
+            color: #0f172a;
+            font-weight: 800;
+        }
+        .rq-progress-meta {
+            color: #64748b;
+            font-size: 0.86rem;
+        }
+        .rq-progress-track {
+            width: 100%;
+            height: 10px;
+            background: #e5e7eb;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .rq-progress-fill {
+            height: 10px;
+            border-radius: 999px;
+        }
+        .rq-progress-good { background: #16a34a; }
+        .rq-progress-low { background: #2563eb; }
+        .rq-progress-high { background: #f59e0b; }
+        .rq-progress-risk { background: #dc2626; }
         </style>
         """,
         unsafe_allow_html=True,
@@ -542,7 +619,11 @@ def _render_score_overview(st: Any, result: dict[str, Any] | None) -> None:
         )
 
 
-def _render_detail_analysis(st: Any, result: dict[str, Any] | None) -> None:
+def _render_detail_analysis(
+    st: Any,
+    result: dict[str, Any] | None,
+    current_payload: dict[str, Any] | None = None,
+) -> None:
     st.subheader("详细分析")
     if not result:
         _render_empty_state(st, "完成计算后，这里会显示模块得分、食物组分布、营养汇总和食材匹配。")
@@ -561,8 +642,7 @@ def _render_detail_analysis(st: Any, result: dict[str, Any] | None) -> None:
         food_group_rows = _food_group_rows(food_groups)
         _plotly_bar_chart(st, food_group_rows, label_key="食物组", value_key="重量 g", color="#16a34a")
 
-    st.subheader("全天营养汇总")
-    st.dataframe(_nutrition_rows(nutrition_totals), hide_index=True, use_container_width=True)
+    _render_nutrition_summary(st, nutrition_totals, (current_payload or {}).get("target_user"))
 
     st.subheader("食材匹配")
     st.dataframe(_resolved_item_rows(result.get("resolved_items") or []), hide_index=True, use_container_width=True)
@@ -716,6 +796,246 @@ def _nutrition_rows(daily_totals: dict[str, Any]) -> list[dict[str, Any]]:
         {"指标": label, "数值": _format_number(daily_totals.get(key))}
         for key, label in labels.items()
     ]
+
+
+def _render_nutrition_summary(
+    st: Any,
+    daily_totals: dict[str, Any],
+    target_user: dict[str, Any] | None = None,
+) -> None:
+    st.subheader("全天营养汇总")
+    targets = _nutrition_display_targets(target_user)
+    core_rows = _core_nutrition_cards(daily_totals, targets)
+    columns = st.columns(4)
+    for column, row in zip(columns, core_rows):
+        with column:
+            _nutrition_card(st, row)
+
+    st.markdown('<div class="rq-muted">关键指标进度</div>', unsafe_allow_html=True)
+    for row in _nutrition_progress_rows(daily_totals, targets):
+        _nutrition_progress_bar(st, row)
+
+    with st.expander("查看完整营养明细"):
+        st.dataframe(_nutrition_rows(daily_totals), hide_index=True, use_container_width=True)
+
+
+def _nutrition_card(st: Any, row: dict[str, Any]) -> None:
+    st.markdown(
+        f"""
+        <div class="rq-nutrition-card">
+            <div class="rq-nutrition-label">{_html_escape(row["label"])}</div>
+            <div class="rq-nutrition-value">{_html_escape(row["value_text"])}</div>
+            <div class="rq-status rq-status-{_html_escape(row["status_class"])}">{_html_escape(row["status"])}</div>
+            <div class="rq-nutrition-note">{_html_escape(row["note"])}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _nutrition_progress_bar(st: Any, row: dict[str, Any]) -> None:
+    width = max(0.0, min(float(row["percent"]), 100.0))
+    st.markdown(
+        f"""
+        <div class="rq-progress-card">
+            <div class="rq-progress-header">
+                <span class="rq-progress-name">{_html_escape(row["label"])}</span>
+                <span class="rq-progress-meta">{_html_escape(row["actual_text"])} / {_html_escape(row["target_text"])} · {_html_escape(row["percent_text"])}</span>
+            </div>
+            <div class="rq-progress-track">
+                <div class="rq-progress-fill rq-progress-{_html_escape(row["status_class"])}" style="width: {width:.1f}%"></div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _nutrition_display_targets(target_user: dict[str, Any] | None = None) -> dict[str, float]:
+    resolved_targets = resolve_daily_targets(target_user)
+    basic_targets = resolve_basic_nutrition_targets(resolved_targets, target_user)
+    energy = float(resolved_targets.get("energy_kcal") or 2000.0)
+    return {
+        "energy_kcal": energy,
+        "protein_g": float(basic_targets.get("protein_g") or energy * 0.15 / 4),
+        "fiber_g": float(basic_targets.get("fiber_g") or 25.0),
+        "sodium_mg": float(resolved_targets.get("sodium_mg_limit") or 2000.0),
+        "added_sugar_g": float(resolved_targets.get("added_sugar_g_limit") or 25.0),
+    }
+
+
+def _core_nutrition_cards(
+    daily_totals: dict[str, Any],
+    targets: dict[str, float],
+) -> list[dict[str, Any]]:
+    energy = _to_float(daily_totals.get("energy_kcal"))
+    protein = _to_float(daily_totals.get("protein_g"))
+    fat = _to_float(daily_totals.get("fat_g"))
+    carbohydrate = _to_float(daily_totals.get("carbohydrate_g"))
+    return [
+        _core_nutrition_card(
+            label="能量",
+            value=energy,
+            unit="kcal",
+            status=_ratio_status(energy, targets["energy_kcal"], low=0.8, good_low=0.9, good_high=1.1, high=1.2),
+            note=f"目标约 {_format_target(targets['energy_kcal'], 'kcal')}，用于判断全天摄入是否匹配。",
+        ),
+        _core_nutrition_card(
+            label="蛋白质",
+            value=protein,
+            unit="g",
+            status=_ratio_status(protein, targets["protein_g"], low=0.8, good_low=0.9, good_high=1.5, high=2.0),
+            note=f"目标约 {_format_target(targets['protein_g'], 'g')}，关注是否满足基础需要。",
+        ),
+        _core_nutrition_card(
+            label="脂肪",
+            value=fat,
+            unit="g",
+            status=_macro_ratio_status(fat, energy, kcal_per_g=9, low=0.15, good_low=0.20, good_high=0.30, high=0.35),
+            note="参考脂肪供能比 20%–30%，用于判断结构是否均衡。",
+        ),
+        _core_nutrition_card(
+            label="碳水化合物",
+            value=carbohydrate,
+            unit="g",
+            status=_macro_ratio_status(carbohydrate, energy, kcal_per_g=4, low=0.40, good_low=0.50, good_high=0.65, high=0.75),
+            note="参考碳水供能比 50%–65%，用于判断主食和整体能量结构。",
+        ),
+    ]
+
+
+def _core_nutrition_card(
+    *,
+    label: str,
+    value: float,
+    unit: str,
+    status: tuple[str, str],
+    note: str,
+) -> dict[str, Any]:
+    return {
+        "label": label,
+        "value": value,
+        "unit": unit,
+        "value_text": _format_nutrition_value(value, unit),
+        "status": status[0],
+        "status_class": status[1],
+        "note": note,
+    }
+
+
+def _nutrition_progress_rows(
+    daily_totals: dict[str, Any],
+    targets: dict[str, float],
+) -> list[dict[str, Any]]:
+    specs = [
+        ("能量", "energy_kcal", "kcal", targets["energy_kcal"], "target"),
+        ("蛋白质", "protein_g", "g", targets["protein_g"], "target"),
+        ("膳食纤维", "fiber_g", "g", targets["fiber_g"], "minimum"),
+        ("钠", "sodium_mg", "mg", targets["sodium_mg"], "limit"),
+        ("添加糖", "added_sugar_g", "g", targets["added_sugar_g"], "limit"),
+    ]
+    return [
+        _nutrition_progress_row(
+            label=label,
+            actual=_to_float(daily_totals.get(key)),
+            target=target,
+            unit=unit,
+            mode=mode,
+        )
+        for label, key, unit, target, mode in specs
+    ]
+
+
+def _nutrition_progress_row(
+    *,
+    label: str,
+    actual: float,
+    target: float,
+    unit: str,
+    mode: str,
+) -> dict[str, Any]:
+    percent = actual / target * 100 if target else 0.0
+    status = _progress_status(percent, mode)
+    return {
+        "label": label,
+        "actual": actual,
+        "target": target,
+        "percent": round(percent, 1),
+        "percent_text": f"{percent:.0f}%",
+        "actual_text": _format_nutrition_value(actual, unit),
+        "target_text": _format_target(target, unit),
+        "status": status[0],
+        "status_class": status[1],
+    }
+
+
+def _ratio_status(
+    actual: float,
+    target: float,
+    *,
+    low: float,
+    good_low: float,
+    good_high: float,
+    high: float,
+) -> tuple[str, str]:
+    if target <= 0:
+        return "良好", "good"
+    ratio = actual / target
+    if ratio < low:
+        return "风险", "risk"
+    if ratio < good_low:
+        return "偏低", "low"
+    if ratio <= good_high:
+        return "良好", "good"
+    if ratio <= high:
+        return "偏高", "high"
+    return "风险", "risk"
+
+
+def _macro_ratio_status(
+    grams: float,
+    energy_kcal: float,
+    *,
+    kcal_per_g: float,
+    low: float,
+    good_low: float,
+    good_high: float,
+    high: float,
+) -> tuple[str, str]:
+    if energy_kcal <= 0:
+        return "风险", "risk"
+    ratio = grams * kcal_per_g / energy_kcal
+    if ratio < low:
+        return "风险", "risk"
+    if ratio < good_low:
+        return "偏低", "low"
+    if ratio <= good_high:
+        return "良好", "good"
+    if ratio <= high:
+        return "偏高", "high"
+    return "风险", "risk"
+
+
+def _progress_status(percent: float, mode: str) -> tuple[str, str]:
+    if mode == "limit":
+        if percent <= 100:
+            return "良好", "good"
+        if percent <= 130:
+            return "偏高", "high"
+        return "风险", "risk"
+    if mode == "minimum":
+        if percent >= 100:
+            return "良好", "good"
+        if percent >= 80:
+            return "偏低", "low"
+        return "风险", "risk"
+    if 90 <= percent <= 110:
+        return "良好", "good"
+    if 80 <= percent < 90:
+        return "偏低", "low"
+    if 110 < percent <= 120:
+        return "偏高", "high"
+    return "风险", "risk"
 
 
 def _display_ingredient_rows(rows: Any) -> list[dict[str, Any]]:
@@ -963,6 +1283,28 @@ def _format_number(value: Any) -> str:
     if isinstance(value, (int, float)):
         return f"{value:.2f}"
     return "-"
+
+
+def _to_float(value: Any) -> float:
+    if value in (None, ""):
+        return 0.0
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _format_nutrition_value(value: Any, unit: str) -> str:
+    number = _to_float(value)
+    if unit == "kcal":
+        return f"{number:.0f} {unit}"
+    if unit == "mg":
+        return f"{number:.0f} {unit}"
+    return f"{number:.1f} {unit}"
+
+
+def _format_target(value: Any, unit: str) -> str:
+    return _format_nutrition_value(value, unit)
 
 
 def _to_chart_number(value: Any) -> float:

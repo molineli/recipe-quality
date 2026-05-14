@@ -2,6 +2,7 @@ import re
 from pathlib import Path
 
 from streamlit_app import (
+    _core_nutrition_cards,
     _display_condiment_rows,
     _display_extra_item_rows,
     _display_ingredient_rows,
@@ -19,6 +20,8 @@ from streamlit_app import (
     _label_sex,
     _label_status,
     _module_score_rows,
+    _nutrition_display_targets,
+    _nutrition_progress_rows,
     _primary_limiting_factor,
 )
 
@@ -124,6 +127,34 @@ def test_demo_table_rows_display_chinese_and_convert_back_to_internal_values():
     assert _internalize_condiment_rows(condiment_rows)[0]["meal_name"] == "lunch"
     assert _internalize_extra_item_rows(extra_rows)[0]["meal_name"] == "snack"
     assert _internalize_extra_item_rows(extra_rows)[0]["item_type"] == "fruit"
+
+
+def test_nutrition_cards_and_progress_rows_use_targets_and_status_labels():
+    targets = _nutrition_display_targets(
+        {"sex": "female", "age": 30, "height_cm": 165, "weight_kg": 58, "activity_level": "light"}
+    )
+    daily_totals = {
+        "energy_kcal": 1303.1,
+        "protein_g": 80.43,
+        "fat_g": 36.69,
+        "carbohydrate_g": 164.93,
+        "fiber_g": 16.16,
+        "sodium_mg": 3281,
+        "added_sugar_g": 0,
+    }
+
+    cards = _core_nutrition_cards(daily_totals, targets)
+    assert [card["label"] for card in cards] == ["能量", "蛋白质", "脂肪", "碳水化合物"]
+    assert cards[0]["value_text"] == "1303 kcal"
+    assert cards[0]["status"] == "风险"
+    assert cards[1]["status"] == "良好"
+
+    progress_rows = _nutrition_progress_rows(daily_totals, targets)
+    assert [row["label"] for row in progress_rows] == ["能量", "蛋白质", "膳食纤维", "钠", "添加糖"]
+    assert progress_rows[0]["actual_text"] == "1303 kcal"
+    assert progress_rows[0]["percent_text"] == "73%"
+    assert progress_rows[3]["status"] == "风险"
+    assert progress_rows[4]["status"] == "良好"
 
 
 def test_download_buttons_have_unique_stable_keys_and_plotly_replaces_bar_chart():
