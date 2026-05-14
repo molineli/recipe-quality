@@ -15,6 +15,9 @@ dependencies = [
 dev = [
     "pytest>=8.0",
 ]
+demo = [
+    "streamlit>=1.36",
+]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

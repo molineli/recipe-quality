@@ -102,6 +102,7 @@ class OpenAIAnnotationClient:
                     "The 'requests' package is required for Qwen annotation calls."
                 ) from exc
             session = requests.Session()
+            session.trust_env = False
         self.session = session
 
     def annotate(self, payload: dict[str, Any]) -> dict[str, Any]:

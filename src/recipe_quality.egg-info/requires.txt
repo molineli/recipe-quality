@@ -1,0 +1,10 @@
+fastapi>=0.111
+python-dotenv>=1.0
+requests>=2.31
+uvicorn>=0.30
+
+[demo]
+streamlit>=1.36
+
+[dev]
+pytest>=8.0

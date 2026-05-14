@@ -1,3 +1,18 @@
+Metadata-Version: 2.4
+Name: recipe-quality
+Version: 0.1.0
+Summary: RQS-P recipe quality scoring with FatSecret-backed nutrition lookup.
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi>=0.111
+Requires-Dist: python-dotenv>=1.0
+Requires-Dist: requests>=2.31
+Requires-Dist: uvicorn>=0.30
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0; extra == "dev"
+Provides-Extra: demo
+Requires-Dist: streamlit>=1.36; extra == "demo"
+
 # Recipe Quality
 
 Recipe Quality 是一个面向全天饮食记录的规则化评分工具。它把用户输入的食谱和食材重量，经过 AI 结构化标注、FatSecret 营养查询、全天营养汇总和本地规则引擎计算，输出可解释的饮食质量分数与等级。

@@ -59,6 +59,7 @@ class FatSecretClient:
                     "Install dependencies with: python -m pip install -e ."
                 ) from exc
             session = requests.Session()
+            session.trust_env = False
         self.session = session
         self._access_token: str | None = None
         self._token_expires_at = 0.0
