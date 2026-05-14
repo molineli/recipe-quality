@@ -22,7 +22,6 @@
           "dish_name": "牛奶鸡蛋早餐",
           "dish_type": "simple_foods",
           "cooking_method": "ready_to_eat_minimal",
-          "food_safety_risk_tags": [],
           "ingredients": [
             {
               "name": "牛奶",
@@ -59,7 +58,6 @@
           "dish_name": "番茄炒蛋",
           "dish_type": "home_cooked",
           "cooking_method": "stir_fry_low_oil",
-          "food_safety_risk_tags": [],
           "ingredients": [
             {
               "name": "番茄",
@@ -99,7 +97,6 @@
           "dish_name": "米饭",
           "dish_type": "staple",
           "cooking_method": "porridge_or_cooked_grain",
-          "food_safety_risk_tags": [],
           "ingredients": [
             {
               "name": "米饭",
@@ -125,7 +122,6 @@
           "dish_name": "清蒸鲈鱼",
           "dish_type": "home_cooked",
           "cooking_method": "steam",
-          "food_safety_risk_tags": [],
           "ingredients": [
             {
               "name": "鲈鱼",
@@ -150,7 +146,6 @@
           "dish_name": "清炒西兰花",
           "dish_type": "home_cooked",
           "cooking_method": "stir_fry_low_oil",
-          "food_safety_risk_tags": [],
           "ingredients": [
             {
               "name": "西兰花",
@@ -179,7 +174,6 @@
           "dish_name": "杂粮饭",
           "dish_type": "staple",
           "cooking_method": "porridge_or_cooked_grain",
-          "food_safety_risk_tags": [],
           "ingredients": [
             {
               "name": "杂粮饭",
