@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "fastapi>=0.111",
+    "plotly>=5.22",
     "python-dotenv>=1.0",
     "requests>=2.31",
     "uvicorn>=0.30",
@@ -16,7 +17,6 @@ dev = [
     "pytest>=8.0",
 ]
 demo = [
-    "plotly>=5.22",
     "streamlit>=1.36",
 ]
 
