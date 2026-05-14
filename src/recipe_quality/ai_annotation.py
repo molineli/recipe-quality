@@ -6,7 +6,11 @@ from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any
 
-from recipe_quality.config_loader import load_cooking_method_scores, load_processing_level_scores
+from recipe_quality.config_loader import (
+    load_cooking_method_scores,
+    load_food_group_targets,
+    load_processing_level_scores,
+)
 
 
 SCHEMA_VERSION = "recipe_ai_annotation_v1"
@@ -106,6 +110,7 @@ class OpenAIAnnotationClient:
         """Build a qwen-plus/OpenAI-compatible chat completions request."""
         schema = build_annotation_schema(
             cooking_methods=sorted(load_cooking_method_scores()),
+            food_groups=sorted(load_food_group_targets()),
             processing_levels=sorted(load_processing_level_scores()),
         )
         system_prompt = (
@@ -144,6 +149,7 @@ AI_ANNOTATION_INSTRUCTIONS = """Annotate the recipe for deterministic rule scori
 Return only fields allowed by the JSON schema. Do not return any final scores.
 Use the provided enum values for cooking_method and processing_level. Prefer
 unknown labels when the recipe does not provide enough evidence.
+For each ingredient, classify food_group using the provided enum values.
 For each ingredient, provide search_name as a concise English FatSecret US
 database query term while preserving the original ingredient name in the input.
 """
@@ -166,6 +172,7 @@ def merge_annotation(
 ) -> dict[str, Any]:
     """Merge structured AI labels into a recipe payload by stable indices."""
     allowed_cooking = set(load_cooking_method_scores())
+    allowed_food_groups = set(load_food_group_targets())
     allowed_processing = set(load_processing_level_scores())
     output = deepcopy(payload)
     warnings = _direct_score_warnings(annotation)
@@ -204,6 +211,15 @@ def merge_annotation(
             warnings.append(
                 f"Missing search_name for ingredient {ingredient.get('name') or 'unknown ingredient'}."
             )
+        food_group = str(ingredient_annotation.get("food_group") or "").strip()
+        if food_group not in allowed_food_groups:
+            warnings.append(
+                f"Invalid food_group={food_group or 'missing'} for ingredient {ingredient.get('name') or 'unknown ingredient'}; left unset."
+            )
+            food_group = ""
+        if food_group:
+            ingredient["food_group"] = food_group
+            ingredient["food_group_source"] = "ai"
         ingredient["processing_level"] = level
         ingredient["processing_level_source"] = "ai"
         ingredient["processing_level_confidence"] = _bounded_confidence(
@@ -239,6 +255,7 @@ def merge_annotation(
 
 def build_annotation_schema(
     cooking_methods: list[str],
+    food_groups: list[str],
     processing_levels: list[str],
 ) -> dict[str, Any]:
     """Build the strict JSON schema sent to Qwen structured outputs.
@@ -290,6 +307,7 @@ def build_annotation_schema(
                         "dish_index",
                         "ingredient_index",
                         "extra_item_index",
+                        "food_group",
                         "processing_level",
                         "processing_level_confidence",
                         "processing_level_reason",
@@ -306,6 +324,7 @@ def build_annotation_schema(
                         "dish_index": {"type": ["integer", "null"]},
                         "ingredient_index": {"type": ["integer", "null"]},
                         "extra_item_index": {"type": ["integer", "null"]},
+                        "food_group": {"type": "string", "enum": food_groups},
                         "processing_level": {"type": "string", "enum": processing_levels},
                         "processing_level_confidence": {
                             "type": "number",

@@ -66,6 +66,7 @@ class ResolvedFoodItem:
     search_name_source: str | None = None
     edible: bool = True
     food_group: str | None = None
+    food_group_source: str | None = None
     classification_source: str | None = None
     classification_confidence: float | None = None
     processing_level: str | None = None
@@ -92,6 +93,7 @@ class ResolvedFoodItem:
             "search_name_source": self.search_name_source,
             "edible": self.edible,
             "food_group": self.food_group,
+            "food_group_source": self.food_group_source,
             "classification_source": self.classification_source,
             "classification_confidence": self.classification_confidence,
             "processing_level": self.processing_level,

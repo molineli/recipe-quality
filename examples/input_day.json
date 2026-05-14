@@ -21,31 +21,16 @@
         {
           "dish_name": "牛奶鸡蛋早餐",
           "dish_type": "simple_foods",
-          "cooking_method": "ready_to_eat_minimal",
           "ingredients": [
             {
               "name": "牛奶",
-              "search_name": "milk",
               "amount_g": 250,
-	              "edible": true,
-	              "food_group": "dairy",
-	              "processing_level": "minimally_processed",
-	              "processing_level_source": "ai",
-	              "processing_level_confidence": 0.9,
-	              "classification_source": "ai",
-              "classification_confidence": 0.98
+	              "edible": true
             },
             {
               "name": "鸡蛋",
-              "search_name": "egg",
               "amount_g": 50,
-	              "edible": true,
-	              "food_group": "eggs",
-	              "processing_level": "unprocessed",
-	              "processing_level_source": "ai",
-	              "processing_level_confidence": 0.9,
-	              "classification_source": "ai",
-              "classification_confidence": 0.98
+	              "edible": true
             }
           ],
           "condiments": []
@@ -59,31 +44,16 @@
         {
           "dish_name": "番茄炒蛋",
           "dish_type": "home_cooked",
-          "cooking_method": "stir_fry_low_oil",
           "ingredients": [
             {
               "name": "番茄",
-              "search_name": "tomato",
               "amount_g": 200,
-	              "edible": true,
-	              "food_group": "vegetables",
-	              "processing_level": "unprocessed",
-	              "processing_level_source": "ai",
-	              "processing_level_confidence": 0.9,
-	              "classification_source": "ai",
-              "classification_confidence": 0.98
+	              "edible": true
             },
             {
               "name": "鸡蛋",
-              "search_name": "egg",
               "amount_g": 100,
-	              "edible": true,
-	              "food_group": "eggs",
-	              "processing_level": "unprocessed",
-	              "processing_level_source": "ai",
-	              "processing_level_confidence": 0.9,
-	              "classification_source": "ai",
-              "classification_confidence": 0.98
+	              "edible": true
             }
           ],
           "condiments": [
@@ -100,19 +70,11 @@
         {
           "dish_name": "米饭",
           "dish_type": "staple",
-          "cooking_method": "porridge_or_cooked_grain",
           "ingredients": [
             {
               "name": "米饭",
-              "search_name": "cooked white rice",
               "amount_g": 200,
-	              "edible": true,
-	              "food_group": "grains_and_tubers",
-	              "processing_level": "minimally_processed",
-	              "processing_level_source": "ai",
-	              "processing_level_confidence": 0.9,
-	              "classification_source": "ai",
-              "classification_confidence": 0.95
+	              "edible": true
             }
           ],
           "condiments": []
@@ -126,19 +88,11 @@
         {
           "dish_name": "清蒸鲈鱼",
           "dish_type": "home_cooked",
-          "cooking_method": "steam",
           "ingredients": [
             {
               "name": "鲈鱼",
-              "search_name": "sea bass",
               "amount_g": 150,
-	              "edible": true,
-	              "food_group": "aquatic_products",
-	              "processing_level": "unprocessed",
-	              "processing_level_source": "ai",
-	              "processing_level_confidence": 0.9,
-	              "classification_source": "ai",
-              "classification_confidence": 0.98
+	              "edible": true
             }
           ],
           "condiments": [
@@ -151,19 +105,11 @@
         {
           "dish_name": "清炒西兰花",
           "dish_type": "home_cooked",
-          "cooking_method": "stir_fry_low_oil",
           "ingredients": [
             {
               "name": "西兰花",
-              "search_name": "broccoli",
               "amount_g": 200,
-	              "edible": true,
-	              "food_group": "vegetables",
-	              "processing_level": "unprocessed",
-	              "processing_level_source": "ai",
-	              "processing_level_confidence": 0.9,
-	              "classification_source": "ai",
-              "classification_confidence": 0.98
+	              "edible": true
             }
           ],
           "condiments": [
@@ -180,19 +126,11 @@
         {
           "dish_name": "杂粮饭",
           "dish_type": "staple",
-          "cooking_method": "porridge_or_cooked_grain",
           "ingredients": [
             {
               "name": "杂粮饭",
-              "search_name": "cooked multigrain rice",
               "amount_g": 180,
-	              "edible": true,
-	              "food_group": "grains_and_tubers",
-	              "processing_level": "minimally_processed",
-	              "processing_level_source": "ai",
-	              "processing_level_confidence": 0.9,
-	              "classification_source": "ai",
-              "classification_confidence": 0.95
+	              "edible": true
             }
           ],
           "condiments": []
@@ -203,16 +141,9 @@
   "extra_items": [
     {
       "name": "苹果",
-      "search_name": "apple",
       "amount_g": 180,
       "meal_name": "snack",
-	      "item_type": "fruit",
-	      "food_group": "fruits",
-	      "processing_level": "unprocessed",
-	      "processing_level_source": "ai",
-	      "processing_level_confidence": 0.9,
-	      "classification_source": "ai",
-      "classification_confidence": 0.98
+	      "item_type": "fruit"
     }
   ],
   "record_quality": {

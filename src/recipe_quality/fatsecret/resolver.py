@@ -31,6 +31,7 @@ class FatSecretResolver:
             "search_name_source": item.get("search_name_source"),
             "edible": item.get("edible", True),
             "food_group": item.get("food_group"),
+            "food_group_source": item.get("food_group_source"),
             "classification_source": item.get("classification_source"),
             "classification_confidence": item.get("classification_confidence"),
             "processing_level": item.get("processing_level"),

@@ -95,6 +95,7 @@ def sample_annotation():
                 "dish_index": 0,
                 "ingredient_index": 0,
                 "extra_item_index": None,
+                "food_group": "vegetables",
                 "processing_level": "unprocessed",
                 "processing_level_confidence": 0.9,
                 "processing_level_reason": "Fresh tomato.",
@@ -108,6 +109,7 @@ def sample_annotation():
                 "dish_index": None,
                 "ingredient_index": None,
                 "extra_item_index": 0,
+                "food_group": "fruits",
                 "processing_level": "unprocessed",
                 "processing_level_confidence": 0.92,
                 "processing_level_reason": "Fresh fruit.",
@@ -144,16 +146,20 @@ def test_openai_annotation_client_sends_schema_and_merges_annotations():
     assert request_payload["response_format"] == {"type": "json_object"}
     assert "stir_fry_low_oil" in system_prompt
     assert "unprocessed" in system_prompt
+    assert "vegetables" in system_prompt
     assert "search_name" in system_prompt
     dish = annotated["meals"][0]["dishes"][0]
     assert dish["cooking_method"] == "stir_fry_low_oil"
     assert dish["cooking_method_source"] == "ai"
     ingredient = dish["ingredients"][0]
+    assert ingredient["food_group"] == "vegetables"
+    assert ingredient["food_group_source"] == "ai"
     assert ingredient["processing_level"] == "unprocessed"
     assert ingredient["search_name"] == "tomato"
     assert ingredient["search_name_source"] == "ai"
     assert ingredient["liked_food_matches"] == ["tomato"]
     assert annotated["extra_items"][0]["processing_level"] == "unprocessed"
+    assert annotated["extra_items"][0]["food_group"] == "fruits"
     assert annotated["extra_items"][0]["search_name"] == "apple"
     assert annotated["habit_match_level"] == "full"
     assert annotated["feasibility"]["step_complexity"] == "simple"
@@ -163,6 +169,7 @@ def test_openai_annotation_client_sends_schema_and_merges_annotations():
 def test_merge_annotation_falls_back_for_invalid_labels_and_ignores_scores():
     annotation = sample_annotation()
     annotation["dish_annotations"][0]["cooking_method"] = "not_a_method"
+    annotation["ingredient_annotations"][0]["food_group"] = "not_a_group"
     annotation["ingredient_annotations"][0]["processing_level"] = "industrial"
     annotation["ingredient_annotations"][0]["liked_food_use_quality"] = "excellent"
     annotation["e_score"] = 8
@@ -177,6 +184,7 @@ def test_merge_annotation_falls_back_for_invalid_labels_and_ignores_scores():
     assert ingredient["liked_food_use_quality"] == "unknown"
     assert "e_score" not in annotated
     assert any("Invalid cooking_method" in warning for warning in warnings)
+    assert any("Invalid food_group" in warning for warning in warnings)
     assert any("Invalid processing_level" in warning for warning in warnings)
     assert any("Ignored direct AI score field: e_score" in warning for warning in warnings)
 

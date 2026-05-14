@@ -108,6 +108,7 @@ def _ingredient_record(
         "amount_g": amount_g,
         "edible": ingredient.get("edible", True),
         "food_group": ingredient.get("food_group"),
+        "food_group_source": ingredient.get("food_group_source"),
         "classification_source": ingredient.get("classification_source"),
         "classification_confidence": ingredient.get("classification_confidence"),
         "processing_level": ingredient.get("processing_level"),
