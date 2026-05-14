@@ -2,8 +2,12 @@ from recipe_quality.fatsecret.resolver import FatSecretResolver, choose_serving
 
 
 class FakeClient:
+    def __init__(self):
+        self.last_query = None
+
     def search_foods(self, query, max_results=10):
         """模拟 FatSecret 搜索接口返回品牌和通用候选。"""
+        self.last_query = query
         return {
             "foods": {
                 "food": [
@@ -52,6 +56,19 @@ def test_resolver_prefers_generic_candidate_and_100g_serving():
     assert resolved.nutrients.energy_kcal == 260
     assert resolved.match_confidence == "high"
     assert resolved.nutrition_estimation_status == "resolved"
+
+
+def test_resolver_uses_search_name_for_fatsecret_query_and_keeps_original_name():
+    client = FakeClient()
+    resolver = FatSecretResolver(client)
+
+    resolved = resolver.resolve_item({"name": "米饭", "search_name": "rice", "amount_g": 200})
+
+    assert client.last_query == "rice"
+    assert resolved.name == "米饭"
+    assert resolved.search_name == "rice"
+    assert resolved.fatsecret_food_name == "Rice"
+    assert resolved.match_confidence == "high"
 
 
 def test_choose_serving_returns_none_when_no_metric_serving():

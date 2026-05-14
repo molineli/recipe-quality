@@ -28,6 +28,8 @@ def evaluate_daily_diet(input_data: dict[str, Any]) -> dict[str, Any]:
                 ingredient_id=item.get("ingredient_id"),
                 meal_name=item.get("meal_name"),
                 dish_name=item.get("dish_name"),
+                search_name=item.get("search_name"),
+                search_name_source=item.get("search_name_source"),
                 edible=item.get("edible", True),
                 food_group=item.get("food_group"),
                 classification_source=item.get("classification_source"),

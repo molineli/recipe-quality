@@ -103,6 +103,8 @@ def _ingredient_record(
         "meal_time": meal_time,
         "dish_name": dish_name,
         "name": name,
+        "search_name": ingredient.get("search_name"),
+        "search_name_source": ingredient.get("search_name_source"),
         "amount_g": amount_g,
         "edible": ingredient.get("edible", True),
         "food_group": ingredient.get("food_group"),

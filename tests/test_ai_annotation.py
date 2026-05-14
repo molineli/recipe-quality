@@ -98,6 +98,7 @@ def sample_annotation():
                 "processing_level": "unprocessed",
                 "processing_level_confidence": 0.9,
                 "processing_level_reason": "Fresh tomato.",
+                "search_name": "tomato",
                 "liked_food_matches": ["tomato"],
                 "liked_food_use_quality": "reasonable",
             },
@@ -110,6 +111,7 @@ def sample_annotation():
                 "processing_level": "unprocessed",
                 "processing_level_confidence": 0.92,
                 "processing_level_reason": "Fresh fruit.",
+                "search_name": "apple",
                 "liked_food_matches": [],
                 "liked_food_use_quality": "unknown",
             },
@@ -142,13 +144,17 @@ def test_openai_annotation_client_sends_schema_and_merges_annotations():
     assert request_payload["response_format"] == {"type": "json_object"}
     assert "stir_fry_low_oil" in system_prompt
     assert "unprocessed" in system_prompt
+    assert "search_name" in system_prompt
     dish = annotated["meals"][0]["dishes"][0]
     assert dish["cooking_method"] == "stir_fry_low_oil"
     assert dish["cooking_method_source"] == "ai"
     ingredient = dish["ingredients"][0]
     assert ingredient["processing_level"] == "unprocessed"
+    assert ingredient["search_name"] == "tomato"
+    assert ingredient["search_name_source"] == "ai"
     assert ingredient["liked_food_matches"] == ["tomato"]
     assert annotated["extra_items"][0]["processing_level"] == "unprocessed"
+    assert annotated["extra_items"][0]["search_name"] == "apple"
     assert annotated["habit_match_level"] == "full"
     assert annotated["feasibility"]["step_complexity"] == "simple"
     assert annotated["ai_annotation_meta"]["model"] == "test-model"

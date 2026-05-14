@@ -16,11 +16,14 @@ class FatSecretResolver:
     def resolve_item(self, item: dict[str, Any]) -> ResolvedFoodItem:
         """解析单个食物项，返回匹配结果、serving 信息和换算后的营养值。"""
         name = str(item.get("name") or "").strip()
+        search_name = str(item.get("search_name") or name).strip()
         amount_g = float(item.get("amount_g") or 0)
         meal_name = item.get("meal_name")
         common_fields = {
             "ingredient_id": item.get("ingredient_id"),
             "dish_name": item.get("dish_name"),
+            "search_name": search_name or None,
+            "search_name_source": item.get("search_name_source"),
             "edible": item.get("edible", True),
             "food_group": item.get("food_group"),
             "classification_source": item.get("classification_source"),
@@ -42,8 +45,8 @@ class FatSecretResolver:
             food_id = str(item.get("fatsecret_food_id") or "")
             candidates: list[dict[str, Any]] = []
             if not food_id:
-                search_payload = self.client.search_foods(name)
-                candidates = self.rank_candidates(name, extract_foods(search_payload))
+                search_payload = self.client.search_foods(search_name)
+                candidates = self.rank_candidates(search_name, extract_foods(search_payload))
                 if not candidates:
                     return ResolvedFoodItem(
                         name=name,
@@ -86,7 +89,7 @@ class FatSecretResolver:
                 fatsecret_food_id=food_id,
                 fatsecret_food_name=food.get("food_name"),
                 serving_used=serving_label(serving),
-                match_confidence=match_confidence(name, food, candidates),
+                match_confidence=match_confidence(search_name, food, candidates),
                 nutrition_estimation_status=status,
                 nutrients=nutrients,
                 candidates=candidates[:5],

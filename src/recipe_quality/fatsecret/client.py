@@ -17,7 +17,7 @@ class FatSecretConfig:
     client_secret: str
     scope: str = "basic"
     region: str | None = "US"
-    language: str | None = "zh"
+    language: str | None = "en"
     token_url: str = "https://oauth.fatsecret.com/connect/token"
     api_url: str = "https://platform.fatsecret.com/rest/server.api"
     timeout_seconds: float = 20.0

@@ -144,6 +144,8 @@ AI_ANNOTATION_INSTRUCTIONS = """Annotate the recipe for deterministic rule scori
 Return only fields allowed by the JSON schema. Do not return any final scores.
 Use the provided enum values for cooking_method and processing_level. Prefer
 unknown labels when the recipe does not provide enough evidence.
+For each ingredient, provide search_name as a concise English FatSecret US
+database query term while preserving the original ingredient name in the input.
 """
 
 
@@ -197,6 +199,11 @@ def merge_annotation(
         if use_quality not in LIKED_FOOD_USE_QUALITIES:
             warnings.append(f"Invalid liked_food_use_quality={use_quality}; used unknown.")
             use_quality = "unknown"
+        search_name = str(ingredient_annotation.get("search_name") or "").strip()
+        if not search_name:
+            warnings.append(
+                f"Missing search_name for ingredient {ingredient.get('name') or 'unknown ingredient'}."
+            )
         ingredient["processing_level"] = level
         ingredient["processing_level_source"] = "ai"
         ingredient["processing_level_confidence"] = _bounded_confidence(
@@ -209,6 +216,9 @@ def merge_annotation(
             ingredient_annotation.get("liked_food_matches")
         )
         ingredient["liked_food_use_quality"] = use_quality
+        if search_name:
+            ingredient["search_name"] = search_name
+            ingredient["search_name_source"] = "ai"
 
     habit_match_level = str(annotation.get("habit_match_level") or "unknown")
     if habit_match_level not in HABIT_MATCH_LEVELS:
@@ -283,6 +293,7 @@ def build_annotation_schema(
                         "processing_level",
                         "processing_level_confidence",
                         "processing_level_reason",
+                        "search_name",
                         "liked_food_matches",
                         "liked_food_use_quality",
                     ],
@@ -302,6 +313,10 @@ def build_annotation_schema(
                             "maximum": 1,
                         },
                         "processing_level_reason": {"type": "string"},
+                        "search_name": {
+                            "type": "string",
+                            "description": "Concise English query term for searching FatSecret US, for example tomato, egg, cooked white rice.",
+                        },
                         "liked_food_matches": {
                             "type": "array",
                             "items": {"type": "string"},

@@ -62,6 +62,8 @@ class ResolvedFoodItem:
     ingredient_id: str | None = None
     meal_name: str | None = None
     dish_name: str | None = None
+    search_name: str | None = None
+    search_name_source: str | None = None
     edible: bool = True
     food_group: str | None = None
     classification_source: str | None = None
@@ -86,6 +88,8 @@ class ResolvedFoodItem:
             "amount_g": self.amount_g,
             "meal_name": self.meal_name,
             "dish_name": self.dish_name,
+            "search_name": self.search_name,
+            "search_name_source": self.search_name_source,
             "edible": self.edible,
             "food_group": self.food_group,
             "classification_source": self.classification_source,

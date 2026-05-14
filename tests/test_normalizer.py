@@ -16,6 +16,8 @@ def test_normalize_recipe_input_flattens_meals_dishes_and_extra_items():
                             {
                                 "name": "tomato",
                                 "amount_g": 200,
+                                "search_name": "tomato",
+                                "search_name_source": "ai",
                                 "food_group": "vegetables",
                                 "processing_level": "unprocessed",
                             },
@@ -40,5 +42,7 @@ def test_normalize_recipe_input_flattens_meals_dishes_and_extra_items():
     assert len(normalized["dish_records"]) == 1
     assert normalized["condiments"][0]["dish_name"] == "tomato eggs"
     assert normalized["ingredient_records"][0]["food_group"] == "vegetables"
+    assert normalized["ingredient_records"][0]["search_name"] == "tomato"
+    assert normalized["ingredient_records"][0]["search_name_source"] == "ai"
     assert normalized["ingredient_records"][0]["processing_level"] == "unprocessed"
     assert "processing_level" not in normalized["dish_records"][0]
