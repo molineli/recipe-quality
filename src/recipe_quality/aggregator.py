@@ -6,6 +6,33 @@ from recipe_quality.models import NUTRIENT_KEYS, ResolvedFoodItem
 from recipe_quality.utils.units import salt_g_to_sodium_mg
 
 
+COOKING_OIL_NAMES = {
+    "油",
+    "烹调油",
+    "食用油",
+    "植物油",
+    "食用植物油",
+    "菜籽油",
+    "花生油",
+    "芝麻油",
+    "香油",
+    "橄榄油",
+    "大豆油",
+    "玉米油",
+    "葵花籽油",
+    "调和油",
+    "熟油",
+    "色拉油",
+    "cooking oil",
+    "oil",
+}
+SALT_NAMES = {"盐", "食盐", "碘盐", "精盐", "海盐", "粗盐", "salt"}
+SOY_SAUCE_NAMES = {"酱油", "生抽", "老抽", "蒸鱼豉油", "豉油", "味极鲜", "soy sauce"}
+LOW_SODIUM_SOY_SAUCE_NAMES = {"低钠酱油", "薄盐酱油", "减盐酱油"}
+SOY_SAUCE_SODIUM_MG_PER_G = 65.0
+LOW_SODIUM_SOY_SAUCE_SODIUM_MG_PER_G = 35.0
+
+
 def aggregate_daily_totals(
     resolved_items: list[ResolvedFoodItem],
     condiments: list[dict[str, Any]] | None = None,
@@ -44,14 +71,19 @@ def aggregate_daily_totals(
         amount_g = _to_float(condiment.get("amount_g"))
         if amount_g is None:
             continue
+        classification = _classify_condiment_name(name)
         sodium_mg = _to_float(condiment.get("sodium_mg"))
         if sodium_mg is not None:
             totals["sodium_mg"] += sodium_mg
-        elif name in {"盐", "食盐", "salt"}:
+        elif classification == "salt":
             totals["sodium_mg"] += salt_g_to_sodium_mg(amount_g)
-        if name in {"油", "烹调油", "食用油", "cooking oil", "oil"}:
+        elif classification == "soy_sauce":
+            totals["sodium_mg"] += amount_g * SOY_SAUCE_SODIUM_MG_PER_G
+        elif classification == "low_sodium_soy_sauce":
+            totals["sodium_mg"] += amount_g * LOW_SODIUM_SOY_SAUCE_SODIUM_MG_PER_G
+        if classification == "cooking_oil":
             totals["cooking_oil_g"] += amount_g
-        if name in {"糖", "白糖", "添加糖", "sugar"}:
+        if classification == "added_sugar":
             totals["added_sugar_g"] += amount_g
 
     unresolved_items = [
@@ -81,6 +113,26 @@ def aggregate_daily_totals(
         "status": quality_status,
     }
     return totals
+
+
+def _classify_condiment_name(name: str) -> str | None:
+    """标准化常见调味品名称，供限制性成分汇总使用。"""
+    normalized = _normalize_condiment_name(name)
+    if normalized in COOKING_OIL_NAMES:
+        return "cooking_oil"
+    if normalized in SALT_NAMES:
+        return "salt"
+    if normalized in LOW_SODIUM_SOY_SAUCE_NAMES:
+        return "low_sodium_soy_sauce"
+    if normalized in SOY_SAUCE_NAMES:
+        return "soy_sauce"
+    if normalized in {"糖", "白糖", "添加糖", "sugar"}:
+        return "added_sugar"
+    return None
+
+
+def _normalize_condiment_name(name: str) -> str:
+    return " ".join(str(name or "").strip().casefold().split())
 
 
 def enrich_dish_records(
