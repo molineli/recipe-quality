@@ -148,6 +148,64 @@ def test_stable_payload_hash_changes_when_payload_content_changes():
     assert _stable_payload_hash(first) != _stable_payload_hash(second)
 
 
+def test_run_pipeline_reuses_cached_result_for_same_payload(monkeypatch):
+    calls = []
+
+    def fake_evaluate_full_pipeline(payload, progress_callback=None):
+        calls.append(payload)
+        if progress_callback:
+            progress_callback("completed", "done")
+        return {"total_score": 88, "payload": payload}
+
+    class FakeStatus:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, traceback):
+            return False
+
+        def update(self, **kwargs):
+            return None
+
+    class FakeProgress:
+        def progress(self, value, text=None):
+            return None
+
+    class FakeStreamlit:
+        def __init__(self):
+            self.session_state = {}
+            self.infos = []
+
+        def status(self, label, expanded=False):
+            return FakeStatus()
+
+        def progress(self, value, text=None):
+            return FakeProgress()
+
+        def write(self, message):
+            return None
+
+        def error(self, message):
+            raise AssertionError(message)
+
+        def exception(self, exc):
+            raise exc
+
+        def info(self, message):
+            self.infos.append(message)
+
+    monkeypatch.setattr("streamlit_app.evaluate_full_pipeline", fake_evaluate_full_pipeline)
+    st = FakeStreamlit()
+    payload = {"date": "2026-05-15", "meals": [{"meal_name": "breakfast", "dishes": []}]}
+
+    _run_pipeline(st, payload)
+    _run_pipeline(st, {"meals": [{"dishes": [], "meal_name": "breakfast"}], "date": "2026-05-15"})
+
+    assert len(calls) == 1
+    assert st.session_state["pipeline_result"]["total_score"] == 88
+    assert st.infos == ["输入未变化，已复用上次计算结果。"]
+
+
 def test_grade_cap_message_explains_energy_ratio_in_plain_chinese():
     messages = _grade_cap_messages(
         [
