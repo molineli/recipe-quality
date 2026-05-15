@@ -112,7 +112,13 @@ class FatSecretResolver:
 
     def resolve_items(self, items: list[dict[str, Any]]) -> list[ResolvedFoodItem]:
         """批量解析食物项列表。"""
-        return [self.resolve_item(item) for item in items]
+        resolved: list[ResolvedFoodItem] = []
+        for item in items:
+            try:
+                resolved.append(self.resolve_item(item))
+            except Exception as exc:
+                resolved.append(_unresolved_item_from_error(item, exc))
+        return resolved
 
     @staticmethod
     def rank_candidates(query: str, foods: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -165,3 +171,34 @@ def match_confidence(query: str, food: dict[str, Any], candidates: list[dict[str
     if candidates and str(candidates[0].get("food_type") or "").casefold() == "generic":
         return "medium"
     return "low"
+
+
+def _unresolved_item_from_error(item: dict[str, Any], exc: Exception) -> ResolvedFoodItem:
+    """Return an unresolved item when one ingredient fails unexpectedly."""
+    name = str(item.get("name") or "").strip()
+    search_name = str(item.get("search_name") or name).strip()
+    return ResolvedFoodItem(
+        name=name,
+        amount_g=_safe_amount_g(item.get("amount_g")),
+        ingredient_id=item.get("ingredient_id"),
+        meal_name=item.get("meal_name"),
+        dish_name=item.get("dish_name"),
+        search_name=search_name or None,
+        search_name_source=item.get("search_name_source"),
+        edible=item.get("edible", True),
+        food_group=item.get("food_group"),
+        food_group_source=item.get("food_group_source"),
+        classification_source=item.get("classification_source"),
+        classification_confidence=item.get("classification_confidence"),
+        processing_level=item.get("processing_level"),
+        processing_level_source=item.get("processing_level_source"),
+        processing_level_confidence=item.get("processing_level_confidence"),
+        error=str(exc) or exc.__class__.__name__,
+    )
+
+
+def _safe_amount_g(value: Any) -> float:
+    try:
+        return float(value or 0)
+    except (TypeError, ValueError):
+        return 0.0

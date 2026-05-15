@@ -71,6 +71,30 @@ def test_resolver_uses_search_name_for_fatsecret_query_and_keeps_original_name()
     assert resolved.match_confidence == "high"
 
 
+def test_resolve_items_keeps_processing_after_single_item_runtime_error():
+    class FlakyClient(FakeClient):
+        def search_foods(self, query, max_results=10):
+            if query == "bad":
+                raise RuntimeError("temporary FatSecret failure")
+            return super().search_foods(query, max_results=max_results)
+
+    resolver = FatSecretResolver(FlakyClient())
+
+    resolved = resolver.resolve_items(
+        [
+            {"name": "bad", "amount_g": 100},
+            {"name": "rice", "amount_g": 200},
+        ]
+    )
+
+    assert len(resolved) == 2
+    assert resolved[0].name == "bad"
+    assert resolved[0].nutrition_estimation_status == "unresolved"
+    assert resolved[0].error == "temporary FatSecret failure"
+    assert resolved[1].name == "rice"
+    assert resolved[1].nutrition_estimation_status == "resolved"
+
+
 def test_choose_serving_returns_none_when_no_metric_serving():
     """验证没有可按克数换算的 serving 时返回 None。"""
     assert choose_serving([{"serving_description": "1 serving", "calories": "100"}]) is None

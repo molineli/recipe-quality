@@ -633,6 +633,11 @@ def _run_pipeline(st: Any, payload: dict[str, Any]) -> None:
 
         try:
             result = evaluate_full_pipeline(payload, progress_callback=on_progress)
+        except RuntimeError as exc:
+            status.update(label="计算失败", state="error")
+            st.error(f"计算过程中遇到外部服务请求问题：{exc}")
+            st.info("请稍后重试；如果只有部分食材查询失败，系统会保留可解析食材并在明细中标记未解析项。")
+            return
         except Exception as exc:  # pragma: no cover - Streamlit displays the exception.
             status.update(label="计算失败", state="error")
             st.exception(exc)

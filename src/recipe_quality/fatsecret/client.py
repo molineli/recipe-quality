@@ -6,6 +6,10 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
+from requests import ConnectTimeout, HTTPError, ReadTimeout, RequestException
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
 
 class FatSecretError(RuntimeError):
     """Raised when FatSecret cannot complete a request."""
@@ -21,6 +25,7 @@ class FatSecretConfig:
     token_url: str = "https://oauth.fatsecret.com/connect/token"
     api_url: str = "https://platform.fatsecret.com/rest/server.api"
     timeout_seconds: float = 20.0
+    timeout: tuple[float, float] = (5, 40)
 
     @classmethod
     def from_env(cls) -> "FatSecretConfig":
@@ -60,6 +65,18 @@ class FatSecretClient:
                 ) from exc
             session = requests.Session()
             session.trust_env = False
+            retry = Retry(
+                total=3,
+                connect=3,
+                read=3,
+                status=3,
+                backoff_factor=0.5,
+                status_forcelist=(429, 500, 502, 503, 504),
+                allowed_methods=frozenset({"GET", "POST"}),
+            )
+            adapter = HTTPAdapter(max_retries=retry)
+            session.mount("https://", adapter)
+            session.mount("http://", adapter)
         self.session = session
         self._access_token: str | None = None
         self._token_expires_at = 0.0
@@ -71,14 +88,15 @@ class FatSecretClient:
 
         credentials = f"{self.config.client_id}:{self.config.client_secret}".encode("utf-8")
         auth_header = base64.b64encode(credentials).decode("ascii")
-        response = self.session.post(
+        response = self._request(
+            "post",
             self.config.token_url,
+            "FatSecret token request",
             headers={
                 "Authorization": f"Basic {auth_header}",
                 "Content-Type": "application/x-www-form-urlencoded",
             },
             data={"grant_type": "client_credentials", "scope": self.config.scope},
-            timeout=self.config.timeout_seconds,
         )
         self._raise_for_response(response, "FatSecret token request failed")
         payload = response.json()
@@ -112,11 +130,12 @@ class FatSecretClient:
 
     def _get(self, params: dict[str, Any]) -> dict[str, Any]:
         """向 FatSecret REST API 发送 GET 请求并处理错误响应。"""
-        response = self.session.get(
+        response = self._request(
+            "get",
             self.config.api_url,
+            "FatSecret API request",
             headers={"Authorization": f"Bearer {self.get_access_token()}"},
             params=params,
-            timeout=self.config.timeout_seconds,
         )
         self._raise_for_response(response, "FatSecret API request failed")
         payload = response.json()
@@ -131,6 +150,32 @@ class FatSecretClient:
             params["region"] = self.config.region
         if self.config.language:
             params["language"] = self.config.language
+
+    def _request(self, method: str, url: str, label: str, **kwargs: Any) -> Any:
+        """Send one FatSecret HTTP request and translate network errors."""
+        request = getattr(self.session, method)
+        try:
+            response = request(url, timeout=self.config.timeout, **kwargs)
+            if hasattr(response, "raise_for_status"):
+                response.raise_for_status()
+            return response
+        except ReadTimeout as exc:
+            raise FatSecretError(f"{label} timed out while reading the response.") from exc
+        except ConnectTimeout as exc:
+            raise FatSecretError(f"{label} timed out while connecting.") from exc
+        except HTTPError as exc:
+            response = getattr(exc, "response", None)
+            if response is not None:
+                try:
+                    detail = response.json()
+                except ValueError:
+                    detail = response.text
+                raise FatSecretError(
+                    f"{label} failed: HTTP {response.status_code} {detail}"
+                ) from exc
+            raise FatSecretError(f"{label} failed with an HTTP error: {exc}") from exc
+        except RequestException as exc:
+            raise FatSecretError(f"{label} failed due to a network error: {exc}") from exc
 
     @staticmethod
     def _raise_for_response(response: Any, message: str) -> None:
