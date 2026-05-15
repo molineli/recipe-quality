@@ -20,15 +20,15 @@
   "meals": [
     {
       "meal_name": "breakfast",
-      "meal_time": "08:00",
+      "meal_time": "07:30",
       "dishes": [
         {
           "dish_name": "番茄鸡蛋面",
-          "dish_type": "staple_food",
+          "dish_type": "mixed_dish",
           "ingredients": [
             {
               "name": "挂面",
-              "amount_g": 60,
+              "amount_g": 70,
               "edible": true
             },
             {
@@ -38,12 +38,7 @@
             },
             {
               "name": "番茄",
-              "amount_g": 150,
-              "edible": true
-            },
-            {
-              "name": "小白菜",
-              "amount_g": 80,
+              "amount_g": 120,
               "edible": true
             }
           ],
@@ -51,6 +46,27 @@
             {
               "name": "食用油",
               "amount_g": 5
+            },
+            {
+              "name": "食盐",
+              "amount_g": 1
+            }
+          ]
+        },
+        {
+          "dish_name": "凉拌黄瓜",
+          "dish_type": "simple_foods",
+          "ingredients": [
+            {
+              "name": "黄瓜",
+              "amount_g": 80,
+              "edible": true
+            }
+          ],
+          "condiments": [
+            {
+              "name": "香油",
+              "amount_g": 3
             },
             {
               "name": "食盐",
@@ -62,95 +78,75 @@
     },
     {
       "meal_name": "lunch",
-      "meal_time": "12:30",
+      "meal_time": "12:00",
       "dishes": [
         {
-          "dish_name": "土豆炖牛肉",
+          "dish_name": "米饭",
+          "dish_type": "simple_foods",
+          "ingredients": [
+            {
+              "name": "大米",
+              "amount_g": 100,
+              "edible": true
+            }
+          ],
+          "condiments": []
+        },
+        {
+          "dish_name": "番茄土豆炖牛腩",
           "dish_type": "mixed_dish",
           "ingredients": [
             {
-              "name": "瘦牛肉",
-              "amount_g": 100,
-              "edible": true
-            },
-            {
-              "name": "土豆",
-              "amount_g": 150,
-              "edible": true
-            },
-            {
-              "name": "胡萝卜",
+              "name": "牛腩",
               "amount_g": 80,
               "edible": true
             },
             {
-              "name": "洋葱",
-              "amount_g": 50,
+              "name": "土豆",
+              "amount_g": 120,
+              "edible": true
+            },
+            {
+              "name": "番茄",
+              "amount_g": 100,
               "edible": true
             }
           ],
           "condiments": [
             {
-              "name": "食用油",
+              "name": "植物油",
               "amount_g": 8
             },
             {
               "name": "生抽",
-              "amount_g": 8
+              "amount_g": 5
             },
             {
               "name": "食盐",
-              "amount_g": 1
+              "amount_g": 2
             }
           ]
         },
         {
           "dish_name": "清炒西兰花",
-          "dish_type": "vegetable_dish",
+          "dish_type": "simple_foods",
           "ingredients": [
             {
               "name": "西兰花",
-              "amount_g": 200,
-              "edible": true
-            },
-            {
-              "name": "蒜",
-              "amount_g": 5,
+              "amount_g": 150,
               "edible": true
             }
           ],
           "condiments": [
             {
-              "name": "食用油",
-              "amount_g": 6
+              "name": "植物油",
+              "amount_g": 5
             },
             {
               "name": "食盐",
               "amount_g": 1
             }
           ]
-        },
-        {
-          "dish_name": "杂粮米饭",
-          "dish_type": "staple_food",
-          "ingredients": [
-            {
-              "name": "大米",
-              "amount_g": 50,
-              "edible": true
-            },
-            {
-              "name": "糙米",
-              "amount_g": 20,
-              "edible": true
-            },
-            {
-              "name": "燕麦米",
-              "amount_g": 10,
-              "edible": true
-            }
-          ],
-          "condiments": []
         }
       ]
     },
@@ -159,96 +155,79 @@
       "meal_time": "18:30",
       "dishes": [
         {
-          "dish_name": "番茄豆腐汤",
-          "dish_type": "soup",
+          "dish_name": "小米粥",
+          "dish_type": "simple_foods",
           "ingredients": [
             {
-              "name": "番茄",
-              "amount_g": 180,
+              "name": "小米",
+              "amount_g": 40,
               "edible": true
-            },
+            }
+          ],
+          "condiments": []
+        },
+        {
+          "dish_name": "清蒸鲈鱼",
+          "dish_type": "simple_foods",
+          "ingredients": [
             {
-              "name": "北豆腐",
-              "amount_g": 150,
-              "edible": true
-            },
-            {
-              "name": "金针菇",
-              "amount_g": 80,
-              "edible": true
-            },
-            {
-              "name": "香葱",
-              "amount_g": 5,
+              "name": "鲈鱼",
+              "amount_g": 100,
               "edible": true
             }
           ],
           "condiments": [
             {
-              "name": "食用油",
+              "name": "姜丝",
+              "amount_g": 5,
+              "edible": true
+            },
+            {
+              "name": "料酒",
               "amount_g": 5
+            },
+            {
+              "name": "蒸鱼豉油",
+              "amount_g": 8
+            }
+          ]
+        },
+        {
+          "dish_name": "蒜蓉菠菜",
+          "dish_type": "simple_foods",
+          "ingredients": [
+            {
+              "name": "菠菜",
+              "amount_g": 180,
+              "edible": true
+            }
+          ],
+          "condiments": [
+            {
+              "name": "植物油",
+              "amount_g": 6
             },
             {
               "name": "食盐",
               "amount_g": 1
             }
           ]
-        },
-        {
-          "dish_name": "清蒸鲈鱼",
-          "dish_type": "fish_dish",
-          "ingredients": [
-            {
-              "name": "鲈鱼",
-              "amount_g": 150,
-              "edible": true
-            },
-            {
-              "name": "姜",
-              "amount_g": 5,
-              "edible": true
-            }
-          ],
-          "condiments": [
-            {
-              "name": "蒸鱼豉油",
-              "amount_g": 6
-            }
-          ]
-        },
-        {
-          "dish_name": "红薯",
-          "dish_type": "staple_food",
-          "ingredients": [
-            {
-              "name": "红薯",
-              "amount_g": 150,
-              "edible": true
-            }
-          ],
-          "condiments": []
         }
       ]
     }
   ],
   "extra_items": [
     {
-      "name": "苹果",
+      "name": "红富士苹果",
       "amount_g": 150,
       "meal_name": "snack",
       "item_type": "fruit"
     },
     {
-      "name": "原味酸奶",
-      "amount_g": 120,
+      "name": "原味无糖酸奶",
+      "amount_g": 100,
       "meal_name": "snack",
       "item_type": "dairy"
-    },
-    {
-      "name": "核桃仁",
-      "amount_g": 10,
-      "meal_name": "snack",
-      "item_type": "nuts"
     }
   ],
   "record_quality": {

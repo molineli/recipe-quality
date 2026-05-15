@@ -23,38 +23,48 @@
       "meal_time": "08:00",
       "dishes": [
         {
-          "dish_name": "番茄鸡蛋面",
-          "dish_type": "staple_food",
+          "dish_name": "水煮蛋",
+          "dish_type": "simple_foods",
           "ingredients": [
-            {
-              "name": "挂面",
-              "amount_g": 60,
-              "edible": true
-            },
             {
               "name": "鸡蛋",
               "amount_g": 50,
               "edible": true
-            },
+            }
+          ],
+          "condiments": []
+        },
+        {
+          "dish_name": "牛奶麦片粥",
+          "dish_type": "complex_foods",
+          "ingredients": [
             {
-              "name": "番茄",
-              "amount_g": 150,
+              "name": "燕麦片",
+              "amount_g": 40,
               "edible": true
             },
             {
-              "name": "小白菜",
-              "amount_g": 80,
+              "name": "纯牛奶",
+              "amount_g": 200,
+              "edible": true
+            }
+          ],
+          "condiments": []
+        },
+        {
+          "dish_name": "凉拌番茄",
+          "dish_type": "simple_foods",
+          "ingredients": [
+            {
+              "name": "番茄",
+              "amount_g": 100,
               "edible": true
             }
           ],
           "condiments": [
             {
-              "name": "食用油",
-              "amount_g": 5
-            },
-            {
-              "name": "食盐",
-              "amount_g": 1
+              "name": "白糖",
+              "amount_g": 3
             }
           ]
         }
@@ -65,88 +75,108 @@
       "meal_time": "12:30",
       "dishes": [
         {
-          "dish_name": "土豆炖牛肉",
-          "dish_type": "mixed_dish",
+          "dish_name": "番茄炒蛋",
+          "dish_type": "complex_foods",
           "ingredients": [
             {
-              "name": "瘦牛肉",
-              "amount_g": 100,
+              "name": "番茄",
+              "amount_g": 150,
               "edible": true
             },
+            {
+              "name": "鸡蛋",
+              "amount_g": 50,
+              "edible": true
+            }
+          ],
+          "condiments": [
+            {
+              "name": "食用油",
+              "amount_g": 5
+            },
+            {
+              "name": "食盐",
+              "amount_g": 2
+            }
+          ]
+        },
+        {
+          "dish_name": "青椒土豆丝",
+          "dish_type": "complex_foods",
+          "ingredients": [
             {
               "name": "土豆",
               "amount_g": 150,
               "edible": true
             },
             {
-              "name": "胡萝卜",
+              "name": "青椒",
+              "amount_g": 30,
+              "edible": true
+            }
+          ],
+          "condiments": [
+            {
+              "name": "食用油",
+              "amount_g": 5
+            },
+            {
+              "name": "食盐",
+              "amount_g": 2
+            },
+            {
+              "name": "陈醋",
+              "amount_g": 5
+            }
+          ]
+        },
+        {
+          "dish_name": "鸡胸肉炒西兰花",
+          "dish_type": "complex_foods",
+          "ingredients": [
+            {
+              "name": "鸡胸肉",
               "amount_g": 80,
               "edible": true
             },
             {
-              "name": "洋葱",
-              "amount_g": 50,
+              "name": "西兰花",
+              "amount_g": 100,
               "edible": true
             }
           ],
           "condiments": [
             {
               "name": "食用油",
-              "amount_g": 8
+              "amount_g": 5
+            },
+            {
+              "name": "食盐",
+              "amount_g": 2
             },
             {
               "name": "生抽",
-              "amount_g": 8
-            },
-            {
-              "name": "食盐",
-              "amount_g": 1
+              "amount_g": 5
             }
           ]
         },
         {
-          "dish_name": "清炒西兰花",
-          "dish_type": "vegetable_dish",
+          "dish_name": "糙米饭",
+          "dish_type": "simple_foods",
           "ingredients": [
-            {
-              "name": "西兰花",
-              "amount_g": 200,
-              "edible": true
-            },
-            {
-              "name": "蒜",
-              "amount_g": 5,
-              "edible": true
-            }
-          ],
-          "condiments": [
-            {
-              "name": "食用油",
-              "amount_g": 6
-            },
-            {
-              "name": "食盐",
-              "amount_g": 1
-            }
-          ]
-        },
-        {
-          "dish_name": "杂粮米饭",
-          "dish_type": "staple_food",
-          "ingredients": [
-            {
-              "name": "大米",
-              "amount_g": 50,
-              "edible": true
-            },
             {
               "name": "糙米",
-              "amount_g": 20,
+              "amount_g": 30,
               "edible": true
             },
             {
-              "name": "燕麦米",
-              "amount_g": 10,
+              "name": "大米",
+              "amount_g": 40,
+              "edible": true
+            },
+            {
+              "name": "水",
+              "amount_g": 100,
               "edible": true
             }
           ],
@@ -159,26 +189,47 @@
       "meal_time": "18:30",
       "dishes": [
         {
-          "dish_name": "番茄豆腐汤",
-          "dish_type": "soup",
+          "dish_name": "清蒸鲈鱼",
+          "dish_type": "complex_foods",
           "ingredients": [
             {
-              "name": "番茄",
-              "amount_g": 180,
+              "name": "鲈鱼",
+              "amount_g": 120,
               "edible": true
             },
             {
-              "name": "北豆腐",
-              "amount_g": 150,
+              "name": "生姜",
+              "amount_g": 5,
               "edible": true
             },
             {
-              "name": "金针菇",
-              "amount_g": 80,
+              "name": "大葱",
+              "amount_g": 5,
+              "edible": true
+            }
+          ],
+          "condiments": [
+            {
+              "name": "蒸鱼豉油",
+              "amount_g": 10
+            },
+            {
+              "name": "食用油",
+              "amount_g": 5
+            }
+          ]
+        },
+        {
+          "dish_name": "清炒小白菜",
+          "dish_type": "complex_foods",
+          "ingredients": [
+            {
+              "name": "小白菜",
+              "amount_g": 200,
               "edible": true
             },
             {
-              "name": "香葱",
+              "name": "大蒜",
               "amount_g": 5,
               "edible": true
             }
@@ -190,39 +241,22 @@
             },
             {
               "name": "食盐",
-              "amount_g": 1
+              "amount_g": 2
             }
           ]
         },
         {
-          "dish_name": "清蒸鲈鱼",
-          "dish_type": "fish_dish",
+          "dish_name": "白米饭",
+          "dish_type": "simple_foods",
           "ingredients": [
             {
-              "name": "鲈鱼",
-              "amount_g": 150,
+              "name": "大米",
+              "amount_g": 50,
               "edible": true
             },
             {
-              "name": "姜",
-              "amount_g": 5,
-              "edible": true
-            }
-          ],
-          "condiments": [
-            {
-              "name": "蒸鱼豉油",
-              "amount_g": 6
-            }
-          ]
-        },
-        {
-          "dish_name": "红薯",
-          "dish_type": "staple_food",
-          "ingredients": [
-            {
-              "name": "红薯",
-              "amount_g": 150,
+              "name": "水",
+              "amount_g": 60,
               "edible": true
             }
           ],
@@ -239,14 +273,8 @@
       "item_type": "fruit"
     },
     {
-      "name": "原味酸奶",
-      "amount_g": 120,
-      "meal_name": "snack",
-      "item_type": "dairy"
-    },
-    {
       "name": "核桃仁",
-      "amount_g": 10,
+      "amount_g": 15,
       "meal_name": "snack",
       "item_type": "nuts"
     }

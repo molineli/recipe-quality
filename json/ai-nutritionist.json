@@ -1,0 +1,199 @@
+{
+  "evaluation_scope": "whole_day",
+  "target_population": "healthy_adult",
+  "date": "2026-05-12",
+  "target_user": {
+    "sex": "female",
+    "age": 30,
+    "height_cm": 165,
+    "weight_kg": 58,
+    "activity_level": "light",
+    "liked_foods": [
+      "鸡蛋",
+      "番茄",
+      "土豆"
+    ],
+    "disliked_foods": [],
+    "dietary_restrictions": [],
+    "habit_pattern": "chinese_home_meals"
+  },
+  "meals": [
+    {
+      "meal_name": "breakfast",
+      "meal_time": "08:00",
+      "dishes": [
+        {
+          "dish_name": "茶碗蒸",
+          "dish_type": "simple_foods",
+          "ingredients": [
+            {
+              "name": "鸡蛋",
+              "amount_g": 100,
+              "edible": true
+            },
+            {
+              "name": "温水",
+              "amount_g": 80,
+              "edible": true
+            }
+          ],
+          "condiments": [
+            {
+              "name": "薄盐",
+              "amount_g": 0.5
+            }
+          ]
+        },
+        {
+          "dish_name": "全麦馒头",
+          "dish_type": "simple_foods",
+          "ingredients": [
+            {
+              "name": "全麦馒头",
+              "amount_g": 50,
+              "edible": true
+            }
+          ],
+          "condiments": []
+        },
+        {
+          "dish_name": "凉拌番茄",
+          "dish_type": "cold_dish",
+          "ingredients": [
+            {
+              "name": "番茄",
+              "amount_g": 150,
+              "edible": true
+            }
+          ],
+          "condiments": [
+            {
+              "name": "柠檬汁",
+              "amount_g": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "meal_name": "lunch",
+      "meal_time": "12:30",
+      "dishes": [
+        {
+          "dish_name": "清蒸鲈鱼",
+          "dish_type": "steamed_dish",
+          "ingredients": [
+            {
+              "name": "鲈鱼",
+              "amount_g": 200,
+              "edible": true
+            }
+          ],
+          "condiments": [
+            {
+              "name": "蒸鱼豉油",
+              "amount_g": 5
+            },
+            {
+              "name": "熟油",
+              "amount_g": 3
+            }
+          ]
+        },
+        {
+          "dish_name": "白灼西兰花",
+          "dish_type": "blanched_dish",
+          "ingredients": [
+            {
+              "name": "西兰花",
+              "amount_g": 200,
+              "edible": true
+            }
+          ],
+          "condiments": [
+            {
+              "name": "酱油",
+              "amount_g": 5
+            }
+          ]
+        },
+        {
+          "dish_name": "糙米饭",
+          "dish_type": "staple_food",
+          "ingredients": [
+            {
+              "name": "糙米",
+              "amount_g": 150,
+              "edible": true
+            }
+          ],
+          "condiments": []
+        }
+      ]
+    },
+    {
+      "meal_name": "dinner",
+      "meal_time": "18:30",
+      "dishes": [
+        {
+          "dish_name": "番茄豆腐羹",
+          "dish_type": "soup",
+          "ingredients": [
+            {
+              "name": "番茄",
+              "amount_g": 200,
+              "edible": true
+            },
+            {
+              "name": "北豆腐",
+              "amount_g": 150,
+              "edible": true
+            }
+          ],
+          "condiments": [
+            {
+              "name": "食盐",
+              "amount_g": 1
+            },
+            {
+              "name": "食用油",
+              "amount_g": 5
+            }
+          ]
+        },
+        {
+          "dish_name": "荞麦面",
+          "dish_type": "staple_food",
+          "ingredients": [
+            {
+              "name": "荞麦面",
+              "amount_g": 60,
+              "edible": true
+            }
+          ],
+          "condiments": []
+        }
+      ]
+    }
+  ],
+  "extra_items": [
+    {
+      "name": "原味杏仁",
+      "amount_g": 10,
+      "meal_name": "snack",
+      "item_type": "nuts"
+    },
+    {
+      "name": "苹果",
+      "amount_g": 150,
+      "meal_name": "snack",
+      "item_type": "fruit"
+    }
+  ],
+  "record_quality": {
+    "has_ingredient_weights": true,
+    "has_condiments": true,
+    "has_snacks_and_drinks": true,
+    "completeness": "complete"
+  }
+}
