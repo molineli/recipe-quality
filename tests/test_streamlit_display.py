@@ -26,6 +26,8 @@ from streamlit_app import (
     _nutrition_progress_rows,
     _primary_limiting_factor,
     _recipe_payload_to_session_state,
+    _run_pipeline,
+    _stable_payload_hash,
 )
 
 
@@ -113,6 +115,37 @@ def test_meal_energy_rows_from_result_uses_compact_pipeline_resolved_items():
         {"餐次": "午餐", "能量 kcal": 500.0},
         {"餐次": "晚餐", "能量 kcal": 300.0},
     ]
+
+
+def test_stable_payload_hash_is_repeatable_for_same_payload():
+    payload = {
+        "date": "2026-05-15",
+        "meals": [{"meal_name": "breakfast", "dishes": []}],
+    }
+
+    assert _stable_payload_hash(payload) == _stable_payload_hash(payload)
+
+
+def test_stable_payload_hash_ignores_dict_field_order():
+    first = {
+        "date": "2026-05-15",
+        "target_user": {"age": 30, "sex": "female"},
+        "meals": [{"meal_name": "breakfast", "dishes": []}],
+    }
+    second = {
+        "meals": [{"dishes": [], "meal_name": "breakfast"}],
+        "target_user": {"sex": "female", "age": 30},
+        "date": "2026-05-15",
+    }
+
+    assert _stable_payload_hash(first) == _stable_payload_hash(second)
+
+
+def test_stable_payload_hash_changes_when_payload_content_changes():
+    first = {"meals": [{"meal_name": "breakfast", "dishes": []}]}
+    second = {"meals": [{"meal_name": "lunch", "dishes": []}]}
+
+    assert _stable_payload_hash(first) != _stable_payload_hash(second)
 
 
 def test_grade_cap_message_explains_energy_ratio_in_plain_chinese():

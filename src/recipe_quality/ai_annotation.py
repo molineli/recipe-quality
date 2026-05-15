@@ -48,6 +48,7 @@ class OpenAIAnnotationConfig:
     model: str = DEFAULT_OPENAI_MODEL
     api_url: str = DEFAULT_OPENAI_API_URL
     timeout_seconds: float = 30.0
+    temperature: float = 0.0
 
     @classmethod
     def from_env(cls) -> "OpenAIAnnotationConfig":
@@ -67,11 +68,13 @@ class OpenAIAnnotationConfig:
             raise AIAnnotationError("Missing OPENAI_API_KEY in environment.")
 
         timeout = _to_float(os.getenv("OPENAI_TIMEOUT_SECONDS")) or 30.0
+        temperature = _to_float(os.getenv("OPENAI_TEMPERATURE"))
         return cls(
             api_key=api_key,
             model=model or DEFAULT_OPENAI_MODEL,
             api_url=_normalize_chat_completions_url(api_url or DEFAULT_OPENAI_API_URL),
             timeout_seconds=timeout,
+            temperature=temperature if temperature is not None else 0.0,
         )
 
     @classmethod
@@ -83,6 +86,7 @@ class OpenAIAnnotationConfig:
             model=config.model,
             api_url=config.api_url,
             timeout_seconds=timeout_seconds,
+            temperature=config.temperature,
         )
 
 
@@ -149,6 +153,7 @@ class OpenAIAnnotationClient:
                 },
             ],
             "response_format": {"type": "json_object"},
+            "temperature": self.config.temperature,
         }
 
     @staticmethod

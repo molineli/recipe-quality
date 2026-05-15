@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import html
 import json
 import sys
@@ -225,6 +226,7 @@ def _reset_state(st: Any) -> None:
         "extra_item_rows",
         "record_quality",
         "pipeline_result",
+        "pipeline_input_hash",
     ]:
         st.session_state.pop(key, None)
     for key in ["ingredient_editor", "condiment_editor", "extra_editor"]:
@@ -234,6 +236,11 @@ def _reset_state(st: Any) -> None:
 
 def _load_example_payload() -> dict[str, Any]:
     return json.loads(EXAMPLE_PATH.read_text(encoding="utf-8"))
+
+
+def _stable_payload_hash(payload: dict[str, Any]) -> str:
+    normalized = json.dumps(payload, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 
 
 def _render_json_importer(st: Any) -> None:
@@ -291,6 +298,7 @@ def _apply_imported_recipe_state(st: Any, state: dict[str, Any] | None) -> None:
     for key, value in state.items():
         st.session_state[key] = value
     st.session_state.pop("pipeline_result", None)
+    st.session_state.pop("pipeline_input_hash", None)
     for key in ["ingredient_editor", "condiment_editor", "extra_editor"]:
         st.session_state.pop(key, None)
 
@@ -624,6 +632,14 @@ def _editable_tables(st: Any) -> tuple[Any, Any, Any]:
 
 
 def _run_pipeline(st: Any, payload: dict[str, Any]) -> None:
+    input_hash = _stable_payload_hash(payload)
+    if (
+        st.session_state.get("pipeline_input_hash") == input_hash
+        and st.session_state.get("pipeline_result") is not None
+    ):
+        st.info("输入未变化，已复用上次计算结果。")
+        return
+
     with st.status("正在运行完整流程", expanded=True) as status:
         progress_bar = st.progress(0, text="准备开始")
 
@@ -644,6 +660,7 @@ def _run_pipeline(st: Any, payload: dict[str, Any]) -> None:
             return
 
         st.session_state["pipeline_result"] = result
+        st.session_state["pipeline_input_hash"] = input_hash
         progress_bar.progress(100, text="完整流程处理完成")
         status.update(label="计算完成", state="complete")
 

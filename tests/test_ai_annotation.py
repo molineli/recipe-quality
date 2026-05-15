@@ -144,6 +144,7 @@ def test_openai_annotation_client_sends_schema_and_merges_annotations():
     system_prompt = request_payload["messages"][0]["content"]
     assert session.last_request["url"].endswith("/chat/completions")
     assert request_payload["response_format"] == {"type": "json_object"}
+    assert request_payload["temperature"] == 0.0
     assert "stir_fry_low_oil" in system_prompt
     assert "unprocessed" in system_prompt
     assert "vegetables" in system_prompt
@@ -164,6 +165,15 @@ def test_openai_annotation_client_sends_schema_and_merges_annotations():
     assert annotated["habit_match_level"] == "full"
     assert annotated["feasibility"]["step_complexity"] == "simple"
     assert annotated["ai_annotation_meta"]["model"] == "test-model"
+
+
+def test_openai_annotation_config_reads_temperature_from_env(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setenv("OPENAI_TEMPERATURE", "0.15")
+
+    config = OpenAIAnnotationConfig.from_env()
+
+    assert config.temperature == 0.15
 
 
 def test_merge_annotation_falls_back_for_invalid_labels_and_ignores_scores():
