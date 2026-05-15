@@ -19,6 +19,7 @@ from streamlit_app import (
     _label_module_key,
     _label_sex,
     _label_status,
+    _meal_energy_rows_from_result,
     _meal_energy_rows,
     _module_score_rows,
     _nutrition_display_targets,
@@ -93,6 +94,25 @@ def test_meal_energy_rows_returns_empty_without_main_meal_energy():
     )
 
     assert rows == []
+
+
+def test_meal_energy_rows_from_result_uses_compact_pipeline_resolved_items():
+    rows = _meal_energy_rows_from_result(
+        {
+            "daily_totals": {"energy_kcal": 900},
+            "resolved_items": [
+                {"meal_name": "breakfast", "nutrients": {"energy_kcal": 100}},
+                {"meal_name": "lunch", "nutrients": {"energy_kcal": 500}},
+                {"meal_name": "dinner", "nutrients": {"energy_kcal": 300}},
+            ],
+        }
+    )
+
+    assert rows == [
+        {"餐次": "早餐", "能量 kcal": 100.0},
+        {"餐次": "午餐", "能量 kcal": 500.0},
+        {"餐次": "晚餐", "能量 kcal": 300.0},
+    ]
 
 
 def test_grade_cap_message_explains_energy_ratio_in_plain_chinese():

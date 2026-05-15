@@ -708,7 +708,7 @@ def _render_detail_analysis(
         _plotly_bar_chart(st, food_group_rows, label_key="食物组", value_key="重量 g", color="#16a34a")
     with meal_col:
         st.subheader("三餐能量占比")
-        meal_energy_rows = _meal_energy_rows(nutrition_totals.get("ingredient_records") or [])
+        meal_energy_rows = _meal_energy_rows_from_result(result)
         _plotly_pie_chart(st, meal_energy_rows, label_key="餐次", value_key="能量 kcal")
 
     _render_nutrition_summary(st, nutrition_totals, (current_payload or {}).get("target_user"))
@@ -1233,7 +1233,7 @@ def _meal_energy_rows(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     meal_order = ("breakfast", "lunch", "dinner")
     meal_energy = {meal: 0.0 for meal in meal_order}
     for item in items:
-        meal_name = str(item.get("meal_name") or "")
+        meal_name = _main_meal_key(item.get("meal_name"))
         if meal_name not in meal_energy:
             continue
         energy = _item_energy_kcal(item)
@@ -1246,6 +1246,25 @@ def _meal_energy_rows(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if energy > 0:
             rows.append({"餐次": _label_meal_name(meal), "能量 kcal": _to_chart_number(energy)})
     return rows
+
+
+def _meal_energy_rows_from_result(result: dict[str, Any]) -> list[dict[str, Any]]:
+    daily_totals = result.get("daily_totals") or {}
+    rows = _meal_energy_rows(daily_totals.get("ingredient_records") or [])
+    if rows:
+        return rows
+    return _meal_energy_rows(result.get("resolved_items") or [])
+
+
+def _main_meal_key(value: Any) -> str | None:
+    text = str(value or "").strip()
+    if text in {"breakfast", "lunch", "dinner"}:
+        return text
+    reverse_labels = {label: key for key, label in MEAL_LABELS.items()}
+    key = reverse_labels.get(text)
+    if key in {"breakfast", "lunch", "dinner"}:
+        return key
+    return None
 
 
 def _item_energy_kcal(item: dict[str, Any]) -> float | None:

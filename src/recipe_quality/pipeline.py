@@ -61,12 +61,14 @@ def build_pipeline_summary(
         "resolved_items": [
             {
                 "name": item.get("name"),
+                "meal_name": item.get("meal_name"),
                 "search_name": item.get("search_name"),
                 "food_group": item.get("food_group"),
                 "processing_level": item.get("processing_level"),
                 "fatsecret_food_name": item.get("fatsecret_food_name"),
                 "serving_used": item.get("serving_used"),
                 "status": item.get("nutrition_estimation_status"),
+                "nutrients": item.get("nutrients"),
                 "error": item.get("error"),
             }
             for item in resolved["items"]

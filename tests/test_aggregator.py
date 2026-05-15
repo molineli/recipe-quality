@@ -1,5 +1,10 @@
-from recipe_quality.aggregator import aggregate_daily_totals
+from recipe_quality.aggregator import (
+    LOW_SODIUM_SOY_SAUCE_SODIUM_MG_PER_G,
+    SOY_SAUCE_SODIUM_MG_PER_G,
+    aggregate_daily_totals,
+)
 from recipe_quality.models import Nutrients, ResolvedFoodItem
+from recipe_quality.utils.units import salt_g_to_sodium_mg
 
 
 def test_aggregate_daily_totals_adds_items_and_condiment_salt():
@@ -57,4 +62,11 @@ def test_aggregate_daily_totals_classifies_common_salt_and_soy_sauce_names():
         ],
     )
 
-    assert round(totals["sodium_mg"], 1) == 1688.4
+    expected_sodium_mg = (
+        salt_g_to_sodium_mg(1)
+        + 10 * SOY_SAUCE_SODIUM_MG_PER_G
+        + 10 * LOW_SODIUM_SOY_SAUCE_SODIUM_MG_PER_G
+        + 5 * SOY_SAUCE_SODIUM_MG_PER_G
+        + 120
+    )
+    assert round(totals["sodium_mg"], 1) == round(expected_sodium_mg, 1)
