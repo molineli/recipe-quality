@@ -8,3 +8,5 @@ pytest-cache-files-*/
 .venv/
 *.pyc
 streamlit_showcase/
+docs/
+input_json/
