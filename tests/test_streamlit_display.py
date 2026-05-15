@@ -19,6 +19,7 @@ from streamlit_app import (
     _label_module_key,
     _label_sex,
     _label_status,
+    _meal_energy_rows,
     _module_score_rows,
     _nutrition_display_targets,
     _nutrition_progress_rows,
@@ -59,6 +60,39 @@ def test_food_group_rows_use_chinese_labels_and_sort_by_weight():
         {"食物组": "unknown_group", "重量 g": 5.0},
     ]
     assert _label_food_group("unknown_group") == "unknown_group"
+
+
+def test_meal_energy_rows_sum_main_meals_and_ignore_snacks_unknown_or_missing_energy():
+    rows = _meal_energy_rows(
+        [
+            {"meal_name": "breakfast", "nutrients": {"energy_kcal": 100}},
+            {"meal_name": "breakfast", "nutrients": {"energy_kcal": "50.25"}},
+            {"meal_name": "lunch", "nutrients": {"energy_kcal": 620.126}},
+            {"meal_name": "dinner", "energy_kcal": 480},
+            {"meal_name": "snack", "nutrients": {"energy_kcal": 210}},
+            {"meal_name": "late_night", "nutrients": {"energy_kcal": 90}},
+            {"meal_name": "lunch", "nutrients": {"energy_kcal": None}},
+            {"meal_name": "dinner", "nutrients": {"energy_kcal": "unknown"}},
+        ]
+    )
+
+    assert rows == [
+        {"餐次": "早餐", "能量 kcal": 150.25},
+        {"餐次": "午餐", "能量 kcal": 620.13},
+        {"餐次": "晚餐", "能量 kcal": 480.0},
+    ]
+
+
+def test_meal_energy_rows_returns_empty_without_main_meal_energy():
+    rows = _meal_energy_rows(
+        [
+            {"meal_name": "snack", "nutrients": {"energy_kcal": 210}},
+            {"meal_name": "breakfast", "nutrients": {"energy_kcal": None}},
+            {"meal_name": "lunch", "nutrients": {"energy_kcal": "unknown"}},
+        ]
+    )
+
+    assert rows == []
 
 
 def test_grade_cap_message_explains_energy_ratio_in_plain_chinese():

@@ -697,7 +697,7 @@ def _render_detail_analysis(
     nutrition_totals = result.get("daily_totals") or {}
     food_groups = nutrition_totals.get("food_group_amounts_g") or {}
 
-    chart_col, food_col = st.columns(2)
+    chart_col, food_col, meal_col = st.columns(3)
     with chart_col:
         st.subheader("模块分")
         module_rows = _module_score_rows(module_scores)
@@ -706,6 +706,10 @@ def _render_detail_analysis(
         st.subheader("食物组重量")
         food_group_rows = _food_group_rows(food_groups)
         _plotly_bar_chart(st, food_group_rows, label_key="食物组", value_key="重量 g", color="#16a34a")
+    with meal_col:
+        st.subheader("三餐能量占比")
+        meal_energy_rows = _meal_energy_rows(nutrition_totals.get("ingredient_records") or [])
+        _plotly_pie_chart(st, meal_energy_rows, label_key="餐次", value_key="能量 kcal")
 
     _render_nutrition_summary(st, nutrition_totals, (current_payload or {}).get("target_user"))
 
@@ -840,6 +844,47 @@ def _plotly_bar_chart(
         font={"family": "Microsoft YaHei, Arial, sans-serif", "color": "#334155"},
         xaxis={"showgrid": True, "gridcolor": "#e5e7eb", "zeroline": False},
         yaxis={"autorange": "reversed", "showgrid": False},
+    )
+    st.plotly_chart(figure, width="stretch", config={"displayModeBar": False})
+
+
+def _plotly_pie_chart(
+    st: Any,
+    rows: list[dict[str, Any]],
+    *,
+    label_key: str,
+    value_key: str,
+) -> None:
+    if not rows:
+        _render_empty_state(st, "暂无可展示的数据。")
+        return
+    try:
+        import plotly.graph_objects as go
+    except ModuleNotFoundError:
+        st.error("缺少 Plotly 依赖，请运行：python -m pip install -e \".[demo]\"")
+        return
+    figure = go.Figure(
+        data=[
+            go.Pie(
+                labels=[row[label_key] for row in rows],
+                values=[row[value_key] for row in rows],
+                hole=0.36,
+                marker={
+                    "colors": ["#2563eb", "#16a34a", "#f59e0b"],
+                    "line": {"color": "#ffffff", "width": 2},
+                },
+                textinfo="label+percent",
+                hovertemplate="%{label}<br>%{value:.2f} kcal<br>%{percent}<extra></extra>",
+            )
+        ]
+    )
+    figure.update_layout(
+        height=330,
+        margin={"l": 16, "r": 16, "t": 18, "b": 24},
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font={"family": "Microsoft YaHei, Arial, sans-serif", "color": "#334155"},
+        showlegend=False,
     )
     st.plotly_chart(figure, width="stretch", config={"displayModeBar": False})
 
@@ -1184,6 +1229,34 @@ def _food_group_rows(food_groups: dict[str, Any]) -> list[dict[str, Any]]:
     return sorted(rows, key=lambda row: row["重量 g"], reverse=True)
 
 
+def _meal_energy_rows(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    meal_order = ("breakfast", "lunch", "dinner")
+    meal_energy = {meal: 0.0 for meal in meal_order}
+    for item in items:
+        meal_name = str(item.get("meal_name") or "")
+        if meal_name not in meal_energy:
+            continue
+        energy = _item_energy_kcal(item)
+        if energy is None or energy <= 0:
+            continue
+        meal_energy[meal_name] += energy
+    rows = []
+    for meal in meal_order:
+        energy = meal_energy[meal]
+        if energy > 0:
+            rows.append({"餐次": _label_meal_name(meal), "能量 kcal": _to_chart_number(energy)})
+    return rows
+
+
+def _item_energy_kcal(item: dict[str, Any]) -> float | None:
+    nutrients = item.get("nutrients") or {}
+    if isinstance(nutrients, dict):
+        energy = _to_optional_float(nutrients.get("energy_kcal"))
+        if energy is not None:
+            return energy
+    return _to_optional_float(item.get("energy_kcal"))
+
+
 def _resolved_item_rows(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [
         {
@@ -1379,6 +1452,15 @@ def _to_chart_number(value: Any) -> float:
         return round(float(value), 2)
     except (TypeError, ValueError):
         return 0.0
+
+
+def _to_optional_float(value: Any) -> float | None:
+    if value in (None, ""):
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
 
 
 def _format_ratio_percent(value: Any) -> str:
