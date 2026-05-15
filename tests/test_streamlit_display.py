@@ -23,6 +23,7 @@ from streamlit_app import (
     _nutrition_display_targets,
     _nutrition_progress_rows,
     _primary_limiting_factor,
+    _recipe_payload_to_session_state,
 )
 
 
@@ -155,6 +156,83 @@ def test_nutrition_cards_and_progress_rows_use_targets_and_status_labels():
     assert progress_rows[0]["percent_text"] == "73%"
     assert progress_rows[3]["status"] == "风险"
     assert progress_rows[4]["status"] == "良好"
+
+
+def test_recipe_payload_to_session_state_loads_ai_generated_json_without_ai_labels():
+    raw_json = b"""{
+      "evaluation_scope": "whole_day",
+      "target_population": "healthy_adult",
+      "date": "2026-05-12",
+      "target_user": {
+        "sex": "female",
+        "age": 30,
+        "height_cm": 165,
+        "weight_kg": 58,
+        "activity_level": "light",
+        "liked_foods": ["\xe9\xb8\xa1\xe8\x9b\x8b"],
+        "disliked_foods": [],
+        "dietary_restrictions": [],
+        "habit_pattern": "chinese_home_meals"
+      },
+      "meals": [
+        {
+          "meal_name": "breakfast",
+          "meal_time": "08:00",
+          "dishes": [
+            {
+              "dish_name": "\xe7\x87\x95\xe9\xba\xa6\xe9\xb8\xa1\xe8\x9b\x8b\xe9\xa4\x90",
+              "dish_type": "simple_foods",
+              "ingredients": [
+                {"name": "\xe7\x87\x95\xe9\xba\xa6", "amount_g": 50, "edible": true}
+              ],
+              "condiments": []
+            }
+          ]
+        },
+        {
+          "meal_name": "lunch",
+          "meal_time": "12:30",
+          "dishes": [
+            {
+              "dish_name": "\xe8\xa5\xbf\xe7\xba\xa2\xe6\x9f\xbf\xe9\xb8\xa1\xe8\x9b\x8b",
+              "dish_type": "home_cooked",
+              "ingredients": [
+                {"name": "\xe7\x95\xaa\xe8\x8c\x84", "amount_g": 200, "edible": true}
+              ],
+              "condiments": [{"name": "\xe9\xa3\x9f\xe7\x9b\x90", "amount_g": 1.5}]
+            }
+          ]
+        }
+      ],
+      "extra_items": [
+        {"name": "\xe8\x8b\xb9\xe6\x9e\x9c", "amount_g": 180, "meal_name": "snack", "item_type": "fruit"}
+      ],
+      "record_quality": {
+        "has_ingredient_weights": true,
+        "has_condiments": true,
+        "has_snacks_and_drinks": true,
+        "completeness": "complete"
+      }
+    }"""
+
+    state, error = _recipe_payload_to_session_state(raw_json)
+
+    assert error is None
+    assert state["date"] == "2026-05-12"
+    assert state["target_user"]["sex"] == "female"
+    assert state["ingredient_rows"][0]["meal_name"] == "早餐"
+    assert state["ingredient_rows"][0]["dish_type"] == "简单食物"
+    assert state["condiment_rows"][0]["meal_name"] == "午餐"
+    assert state["extra_item_rows"][0]["meal_name"] == "加餐"
+    assert state["extra_item_rows"][0]["item_type"] == "水果"
+    assert "search_name" not in state["ingredient_rows"][0]
+
+
+def test_recipe_payload_to_session_state_rejects_invalid_json_without_state():
+    state, error = _recipe_payload_to_session_state("```json\n{}\n```")
+
+    assert state is None
+    assert "JSON 解析失败" in error
 
 
 def test_download_buttons_have_unique_stable_keys_and_plotly_replaces_bar_chart():

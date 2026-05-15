@@ -161,6 +161,7 @@ def main() -> None:
         ["输入配置", "评分总览", "详细分析", "原始数据"]
     )
     with input_tab:
+        _render_json_importer(st)
         ingredient_rows, condiment_rows, extra_rows = _editable_tables(st)
 
     current_payload = build_payload_from_demo_tables(
@@ -233,6 +234,65 @@ def _reset_state(st: Any) -> None:
 
 def _load_example_payload() -> dict[str, Any]:
     return json.loads(EXAMPLE_PATH.read_text(encoding="utf-8"))
+
+
+def _render_json_importer(st: Any) -> None:
+    with st.expander("导入 AI 生成的食谱 JSON"):
+        st.caption("请上传纯 JSON 文件。Markdown 代码块或说明文字不会被解析。")
+        uploaded_file = st.file_uploader(
+            "选择 JSON 文件",
+            type=["json"],
+            key="import_recipe_json_file",
+        )
+        if st.button("加载 JSON 到表格", key="load_recipe_json_to_tables"):
+            if uploaded_file is None:
+                st.error("请先选择一个 .json 文件。")
+                return
+            state, error = _recipe_payload_to_session_state(uploaded_file.getvalue())
+            if error:
+                st.error(error)
+                return
+            _apply_imported_recipe_state(st, state)
+            st.success("JSON 已加载到表格。请检查后点击“开始计算”。")
+            st.rerun()
+
+
+def _recipe_payload_to_session_state(raw_data: bytes | str) -> tuple[dict[str, Any] | None, str | None]:
+    try:
+        text = raw_data.decode("utf-8") if isinstance(raw_data, bytes) else str(raw_data)
+        payload = json.loads(text)
+    except UnicodeDecodeError:
+        return None, "JSON 文件必须使用 UTF-8 编码。"
+    except json.JSONDecodeError as exc:
+        return None, f"JSON 解析失败：{exc.msg}。请确认文件只包含纯 JSON。"
+    if not isinstance(payload, dict):
+        return None, "JSON 顶层必须是对象。"
+    if not isinstance(payload.get("meals"), list):
+        return None, "JSON 必须包含 meals 数组。"
+
+    return {
+        "target_user": target_user_from_payload(payload),
+        "date": payload.get("date", ""),
+        "ingredient_rows": _display_ingredient_rows(ingredient_rows_from_payload(payload)),
+        "condiment_rows": _display_condiment_rows(condiment_rows_from_payload(payload)),
+        "extra_item_rows": _display_extra_item_rows(extra_item_rows_from_payload(payload)),
+        "record_quality": payload.get("record_quality") or {
+            "has_ingredient_weights": True,
+            "has_condiments": bool(condiment_rows_from_payload(payload)),
+            "has_snacks_and_drinks": bool(extra_item_rows_from_payload(payload)),
+            "completeness": "complete",
+        },
+    }, None
+
+
+def _apply_imported_recipe_state(st: Any, state: dict[str, Any] | None) -> None:
+    if state is None:
+        return
+    for key, value in state.items():
+        st.session_state[key] = value
+    st.session_state.pop("pipeline_result", None)
+    for key in ["ingredient_editor", "condiment_editor", "extra_editor"]:
+        st.session_state.pop(key, None)
 
 
 def _inject_dashboard_css(st: Any) -> None:
