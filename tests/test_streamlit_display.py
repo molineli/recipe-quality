@@ -156,7 +156,11 @@ def test_run_pipeline_reuses_cached_result_for_same_payload(monkeypatch):
         calls.append(payload)
         if progress_callback:
             progress_callback("completed", "done")
-        return {"total_score": 88, "payload": payload}
+        return {
+            "total_score": 88,
+            "payload": payload,
+            "daily_totals": {"iron_mg": 1, "calcium_mg": 20, "vitamin_c_mg": 20},
+        }
 
     class FakeStatus:
         def __enter__(self):
@@ -205,6 +209,70 @@ def test_run_pipeline_reuses_cached_result_for_same_payload(monkeypatch):
     assert len(calls) == 1
     assert st.session_state["pipeline_result"]["total_score"] == 88
     assert st.infos == ["输入未变化，已复用上次计算结果。"]
+
+
+def test_run_pipeline_recalculates_same_payload_when_cached_result_lacks_micronutrients(monkeypatch):
+    calls = []
+
+    def fake_evaluate_full_pipeline(payload, progress_callback=None):
+        calls.append(payload)
+        if progress_callback:
+            progress_callback("completed", "done")
+        return {
+            "total_score": 91,
+            "daily_totals": {"iron_mg": 1, "calcium_mg": 20, "vitamin_c_mg": 20},
+        }
+
+    class FakeStatus:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, traceback):
+            return False
+
+        def update(self, **kwargs):
+            return None
+
+    class FakeProgress:
+        def progress(self, value, text=None):
+            return None
+
+    class FakeStreamlit:
+        def __init__(self, payload):
+            self.session_state = {
+                "pipeline_input_hash": _stable_payload_hash(payload),
+                "pipeline_result": {"total_score": 88, "daily_totals": {"energy_kcal": 36}},
+            }
+            self.infos = []
+
+        def status(self, label, expanded=False):
+            return FakeStatus()
+
+        def progress(self, value, text=None):
+            return FakeProgress()
+
+        def write(self, message):
+            return None
+
+        def error(self, message):
+            raise AssertionError(message)
+
+        def exception(self, exc):
+            raise exc
+
+        def info(self, message):
+            self.infos.append(message)
+
+    monkeypatch.setattr("streamlit_app.evaluate_full_pipeline", fake_evaluate_full_pipeline)
+    payload = {"date": "2026-05-15", "meals": [{"meal_name": "breakfast", "dishes": []}]}
+    st = FakeStreamlit(payload)
+
+    _run_pipeline(st, payload)
+
+    assert len(calls) == 1
+    assert st.session_state["pipeline_result"]["total_score"] == 91
+    assert st.session_state["pipeline_result"]["daily_totals"]["iron_mg"] == 1
+    assert st.infos == []
 
 
 def test_grade_cap_message_explains_energy_ratio_in_plain_chinese():

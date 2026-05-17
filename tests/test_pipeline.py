@@ -92,6 +92,9 @@ def test_evaluate_full_pipeline_runs_steps_and_returns_summary(monkeypatch):
     assert result["resolved_items"][0]["meal_name"] == "lunch"
     assert result["resolved_items"][0]["nutrients"]["energy_kcal"] == 36
     assert result["daily_totals"]["energy_kcal"] == 36
+    assert result["daily_totals"]["calcium_mg"] == 20
+    assert result["daily_totals"]["iron_mg"] == 1
+    assert result["daily_totals"]["vitamin_c_mg"] == 20
     assert result["module_scores"]
     assert result["final_grade"] in {"A", "B", "C", "D", "E"}
 

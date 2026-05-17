@@ -36,6 +36,7 @@ PROGRESS_STEPS = {
     "scoring": 92,
     "completed": 100,
 }
+PIPELINE_CACHE_REQUIRED_DAILY_TOTAL_KEYS = ("iron_mg", "calcium_mg", "vitamin_c_mg")
 SEX_LABELS = {
     "female": "女性",
     "male": "男性",
@@ -633,9 +634,11 @@ def _editable_tables(st: Any) -> tuple[Any, Any, Any]:
 
 def _run_pipeline(st: Any, payload: dict[str, Any]) -> None:
     input_hash = _stable_payload_hash(payload)
+    cached_result = st.session_state.get("pipeline_result")
     if (
         st.session_state.get("pipeline_input_hash") == input_hash
-        and st.session_state.get("pipeline_result") is not None
+        and cached_result is not None
+        and _pipeline_result_has_required_daily_totals(cached_result)
     ):
         st.info("输入未变化，已复用上次计算结果。")
         return
@@ -663,6 +666,15 @@ def _run_pipeline(st: Any, payload: dict[str, Any]) -> None:
         st.session_state["pipeline_input_hash"] = input_hash
         progress_bar.progress(100, text="完整流程处理完成")
         status.update(label="计算完成", state="complete")
+
+
+def _pipeline_result_has_required_daily_totals(result: Any) -> bool:
+    if not isinstance(result, dict):
+        return False
+    daily_totals = result.get("daily_totals")
+    if not isinstance(daily_totals, dict):
+        return False
+    return all(key in daily_totals for key in PIPELINE_CACHE_REQUIRED_DAILY_TOTAL_KEYS)
 
 
 def _render_result(st: Any, result: dict[str, Any]) -> None:
