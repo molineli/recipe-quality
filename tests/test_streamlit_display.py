@@ -24,6 +24,7 @@ from streamlit_app import (
     _module_score_rows,
     _nutrition_display_targets,
     _nutrition_progress_rows,
+    _nutrition_rows,
     _primary_limiting_factor,
     _recipe_payload_to_session_state,
     _run_pipeline,
@@ -287,6 +288,8 @@ def test_nutrition_cards_and_progress_rows_use_targets_and_status_labels():
         "fiber_g": 16.16,
         "sodium_mg": 3281,
         "added_sugar_g": 0,
+        "iron_mg": 10,
+        "calcium_mg": 720,
     }
 
     cards = _core_nutrition_cards(daily_totals, targets)
@@ -296,11 +299,46 @@ def test_nutrition_cards_and_progress_rows_use_targets_and_status_labels():
     assert cards[1]["status"] == "良好"
 
     progress_rows = _nutrition_progress_rows(daily_totals, targets)
-    assert [row["label"] for row in progress_rows] == ["能量", "蛋白质", "膳食纤维", "钠", "添加糖"]
+    assert [row["label"] for row in progress_rows] == ["能量", "蛋白质", "膳食纤维", "钠", "铁", "钙"]
     assert progress_rows[0]["actual_text"] == "1303 kcal"
     assert progress_rows[0]["percent_text"] == "73%"
     assert progress_rows[3]["status"] == "风险"
-    assert progress_rows[4]["status"] == "良好"
+    assert progress_rows[4]["actual_text"] == "10 mg"
+    assert progress_rows[4]["target_text"] == "20 mg"
+    assert progress_rows[4]["percent_text"] == "50%"
+    assert progress_rows[4]["status"] == "风险"
+    assert progress_rows[5]["actual_text"] == "720 mg"
+    assert progress_rows[5]["target_text"] == "800 mg"
+    assert progress_rows[5]["percent_text"] == "90%"
+    assert progress_rows[5]["status"] == "偏低"
+
+
+def test_nutrition_rows_show_micronutrients_instead_of_hidden_display_fields():
+    rows = _nutrition_rows(
+        {
+            "energy_kcal": 1303.1,
+            "protein_g": 80.43,
+            "fat_g": 36.69,
+            "saturated_fat_g": 8.2,
+            "carbohydrate_g": 164.93,
+            "fiber_g": 16.16,
+            "sodium_mg": 3281,
+            "cooking_oil_g": 20,
+            "added_sugar_g": 5,
+            "food_group_count": 6,
+            "iron_mg": 10,
+            "calcium_mg": 720,
+            "vitamin_c_mg": 88,
+        }
+    )
+
+    labels = [row["指标"] for row in rows]
+    assert "铁 mg" in labels
+    assert "钙 mg" in labels
+    assert "维生素 C mg" in labels
+    assert "烹调油 g" not in labels
+    assert "添加糖 g" not in labels
+    assert "有效食物组数" not in labels
 
 
 def test_recipe_payload_to_session_state_loads_ai_generated_json_without_ai_labels():

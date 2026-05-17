@@ -915,9 +915,9 @@ def _nutrition_rows(daily_totals: dict[str, Any]) -> list[dict[str, Any]]:
         "carbohydrate_g": "碳水化合物 g",
         "fiber_g": "膳食纤维 g",
         "sodium_mg": "钠 mg",
-        "cooking_oil_g": "烹调油 g",
-        "added_sugar_g": "添加糖 g",
-        "food_group_count": "有效食物组数",
+        "iron_mg": "铁 mg",
+        "calcium_mg": "钙 mg",
+        "vitamin_c_mg": "维生素 C mg",
     }
     return [
         {"指标": label, "数值": _format_number(daily_totals.get(key))}
@@ -987,7 +987,8 @@ def _nutrition_display_targets(target_user: dict[str, Any] | None = None) -> dic
         "protein_g": float(basic_targets.get("protein_g") or energy * 0.15 / 4),
         "fiber_g": float(basic_targets.get("fiber_g") or 25.0),
         "sodium_mg": float(resolved_targets.get("sodium_mg_limit") or 2000.0),
-        "added_sugar_g": float(resolved_targets.get("added_sugar_g_limit") or 25.0),
+        "iron_mg": float(basic_targets.get("iron_mg") or 12.0),
+        "calcium_mg": float(basic_targets.get("calcium_mg") or 800.0),
     }
 
 
@@ -1059,7 +1060,8 @@ def _nutrition_progress_rows(
         ("蛋白质", "protein_g", "g", targets["protein_g"], "target"),
         ("膳食纤维", "fiber_g", "g", targets["fiber_g"], "minimum"),
         ("钠", "sodium_mg", "mg", targets["sodium_mg"], "limit"),
-        ("添加糖", "added_sugar_g", "g", targets["added_sugar_g"], "limit"),
+        ("铁", "iron_mg", "mg", targets["iron_mg"], "minimum"),
+        ("钙", "calcium_mg", "mg", targets["calcium_mg"], "minimum"),
     ]
     return [
         _nutrition_progress_row(
